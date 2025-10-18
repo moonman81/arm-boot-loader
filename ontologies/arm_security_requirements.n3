@@ -1,0 +1,106 @@
+@prefix : <http://example.org/arm-security-requirements#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# Ontology for Security Requirements of ARM Boot Process
+<http://example.org/arm-security-requirements> a owl:Ontology ;
+  rdfs:label "ARM Security Requirements Ontology" .
+
+# Classes
+:SecurityRequirement a owl:Class ;
+  rdfs:label "Security Requirement" ;
+  rdfs:comment "Requirements to ensure security of the boot process" .
+
+:Threat a owl:Class ;
+  rdfs:label "Threat" ;
+  rdfs:comment "Potential security threats" .
+
+:Mitigation a owl:Class ;
+  rdfs:label "Mitigation" ;
+  rdfs:comment "Actions or mechanisms to mitigate threats" .
+
+# Properties
+:mitigates a owl:ObjectProperty ;
+  rdfs:domain :SecurityRequirement ;
+  rdfs:range :Threat ;
+  rdfs:label "mitigates" .
+
+:hasPriority a owl:DatatypeProperty ;
+  rdfs:domain :SecurityRequirement ;
+  rdfs:range xsd:string ;
+  rdfs:label "has Priority" .
+
+:description a owl:DatatypeProperty ;
+  rdfs:domain :SecurityRequirement ;
+  rdfs:range xsd:string ;
+  rdfs:label "description" .
+
+:threatDescription a owl:DatatypeProperty ;
+  rdfs:domain :Threat ;
+  rdfs:range xsd:string ;
+  rdfs:label "threat Description" .
+
+# Instances - Threats
+:Threat1 a :Threat ;
+  :threatDescription "Unauthorized modification of bootcode.bin, start.elf, or kernel" .
+
+:Threat2 a :Threat ;
+  :threatDescription "Using malicious boot media to load compromised firmware" .
+
+:Threat3 a :Threat ;
+  :threatDescription "Disabling or circumventing secure boot mechanisms" .
+
+:Threat4 a :Threat ;
+  :threatDescription "Theft or compromise of cryptographic keys" .
+
+:Threat5 a :Threat ;
+  :threatDescription "Forcing the system to boot older, vulnerable firmware" .
+
+:Threat6 a :Threat ;
+  :threatDescription "Physical access to inject malicious code" .
+
+:Threat7 a :Threat ;
+  :threatDescription "Man-in-the-middle attacks on network boot" .
+
+# Instances - Security Requirements
+:SR1 a :SecurityRequirement ;
+  :description "Implement secure boot with cryptographic verification of firmware components" ;
+  :hasPriority "High" ;
+  :mitigates :Threat1, :Threat2, :Threat3 .
+
+:SR2 a :SecurityRequirement ;
+  :description "Use hardware root of trust (e.g., OTP bits) for key storage" ;
+  :hasPriority "High" ;
+  :mitigates :Threat4 .
+
+:SR3 a :SecurityRequirement ;
+  :description "Verify integrity of bootcode.bin, start.elf, and kernel using signatures" ;
+  :hasPriority "High" ;
+  :mitigates :Threat1 .
+
+:SR4 a :SecurityRequirement ;
+  :description "Prevent booting from untrusted media without authentication" ;
+  :hasPriority "Medium" ;
+  :mitigates :Threat2 .
+
+:SR5 a :SecurityRequirement ;
+  :description "Support anti-rollback mechanisms to prevent downgrade attacks" ;
+  :hasPriority "Medium" ;
+  :mitigates :Threat5 .
+
+:SR6 a :SecurityRequirement ;
+  :description "Encrypt sensitive boot data if necessary" ;
+  :hasPriority "Low" ;
+  :mitigates :Threat1 .
+
+:SR7 a :SecurityRequirement ;
+  :description "Provide secure update mechanisms for firmware" ;
+  :hasPriority "Medium" ;
+  :mitigates :Threat1, :Threat5 .
+
+:SR8 a :SecurityRequirement ;
+  :description "Log boot events for auditing" ;
+  :hasPriority "Low" ;
+  :mitigates :Threat3, :Threat6 .

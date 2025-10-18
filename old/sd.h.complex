@@ -1,0 +1,182 @@
+/* SD Card Header */
+
+#ifndef SD_H
+#define SD_H
+
+#include <stdint.h>
+
+// FAT types - comprehensive support for all MS-DOS/Windows variants
+typedef enum {
+    FAT12,
+    FAT16,
+    FAT32,
+    EXFAT
+} fat_type_t;
+
+// FAT filesystem structures (common for FAT12/16/32)
+typedef struct {
+    uint8_t jump[3];
+    char oem_name[8];
+    uint16_t bytes_per_sector;
+    uint8_t sectors_per_cluster;
+    uint16_t reserved_sectors;
+    uint8_t num_fats;
+    uint16_t root_entries;
+    uint16_t total_sectors_16;
+    uint8_t media_descriptor;
+    uint16_t sectors_per_fat_16;
+    uint16_t sectors_per_track;
+    uint16_t num_heads;
+    uint32_t hidden_sectors;
+    uint32_t total_sectors_32;
+    uint32_t sectors_per_fat_32;
+    uint16_t flags;
+    uint16_t version;
+    uint32_t root_cluster;
+    uint16_t fs_info_sector;
+    uint16_t backup_boot_sector;
+    uint8_t reserved[12];
+    uint8_t drive_number;
+    uint8_t reserved1;
+    uint8_t boot_signature;
+    uint32_t volume_id;
+    char volume_label[11];
+    char fs_type[8];
+} __attribute__((packed)) fat_boot_sector_t;
+
+typedef struct {
+    char name[11];
+    uint8_t attributes;
+    uint8_t reserved;
+    uint8_t creation_time_tenths;
+    uint16_t creation_time;
+    uint16_t creation_date;
+    uint16_t last_access_date;
+    uint16_t first_cluster_high;
+    uint16_t last_mod_time;
+    uint16_t last_mod_date;
+    uint16_t first_cluster_low;
+    uint32_t file_size;
+} __attribute__((packed)) fat32_dir_entry_t;
+
+// Partition table structures - full support for MBR and GPT
+typedef struct {
+    uint8_t status;
+    uint8_t chs_start[3];
+    uint8_t type;
+    uint8_t chs_end[3];
+    uint32_t lba_start;
+    uint32_t sector_count;
+} __attribute__((packed)) mbr_partition_entry_t;
+
+typedef struct {
+    uint8_t boot_code[446];
+    mbr_partition_entry_t partitions[4];
+    uint16_t signature;  // 0xAA55
+} __attribute__((packed)) mbr_t;
+
+// GPT structures
+typedef struct {
+    uint64_t signature;        // "EFI PART"
+    uint32_t revision;
+    uint32_t header_size;
+    uint32_t crc32;
+    uint32_t reserved;
+    uint64_t current_lba;
+    uint64_t backup_lba;
+    uint64_t first_usable_lba;
+    uint64_t last_usable_lba;
+    uint8_t disk_guid[16];
+    uint64_t partition_array_lba;
+    uint32_t num_partition_entries;
+    uint32_t partition_entry_size;
+    uint32_t partition_array_crc32;
+} __attribute__((packed)) gpt_header_t;
+
+typedef struct {
+    uint8_t type_guid[16];
+    uint8_t unique_guid[16];
+    uint64_t first_lba;
+    uint64_t last_lba;
+    uint64_t attributes;
+    uint16_t name[36];  // UTF-16
+} __attribute__((packed)) gpt_partition_entry_t;
+
+// exFAT structures
+typedef struct {
+    uint8_t jump[3];
+    char fs_name[8];  // "EXFAT   "
+    uint8_t zero[53];
+    uint64_t partition_offset;
+    uint64_t volume_length;
+    uint32_t fat_offset;
+    uint32_t fat_length;
+    uint32_t cluster_heap_offset;
+    uint32_t cluster_count;
+    uint32_t root_dir_cluster;
+    uint32_t volume_serial;
+    uint16_t fs_revision;
+    uint16_t volume_flags;
+    uint8_t bytes_per_sector_shift;
+    uint8_t sectors_per_cluster_shift;
+    uint8_t num_fats;
+    uint8_t drive_select;
+    uint8_t percent_used;
+    uint8_t reserved[7];
+    uint8_t boot_code[390];
+    uint16_t boot_signature;
+} __attribute__((packed)) exfat_boot_sector_t;
+
+typedef struct {
+    uint8_t entry_type;
+    union {
+        struct {
+            uint8_t secondary_count;
+            uint16_t set_checksum;
+            uint16_t attributes;
+            uint16_t reserved1;
+            uint32_t create_timestamp;
+            uint32_t last_mod_timestamp;
+            uint32_t last_access_timestamp;
+            uint8_t create_10ms;
+            uint8_t last_mod_10ms;
+            uint8_t create_tz_offset;
+            uint8_t last_mod_tz_offset;
+            uint8_t last_access_tz_offset;
+            uint8_t reserved2[7];
+        } file;
+        struct {
+            uint8_t flags;
+            uint8_t reserved1;
+            uint8_t name_length;
+            uint16_t name_hash;
+            uint16_t reserved2;
+            uint64_t valid_data_length;
+            uint32_t reserved3;
+            uint32_t first_cluster;
+            uint64_t data_length;
+        } stream_ext;
+        struct {
+            uint8_t flags;
+            uint16_t name[15];
+        } file_name;
+    };
+} __attribute__((packed)) exfat_dir_entry_t;
+
+// SD card functions
+int sd_init(void);
+int sd_read_sector(uint32_t sector, uint8_t *buffer);
+int sd_load_file(const char *filename, unsigned long addr);
+
+// Partition functions - full MBR/GPT support
+int partition_detect(void);
+int partition_read_boot_sector(uint32_t partition_lba, uint8_t *buffer);
+
+// FAT filesystem functions - comprehensive FAT12/16/32/exFAT support
+int fat_init(void);
+int fat_find_file(const char *filename, fat32_dir_entry_t *entry);
+int fat_read_file(fat32_dir_entry_t *entry, uint8_t *buffer, uint32_t max_size);
+int exfat_find_file(const char *filename, exfat_dir_entry_t *entry);
+int exfat_read_file(exfat_dir_entry_t *entry, uint8_t *buffer, uint32_t max_size);
+
+#endif

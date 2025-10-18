@@ -1,0 +1,184 @@
+@prefix : <http://example.org/arm-boot-tutorial#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# Ontology for ARM Boot Tutorial Content
+<http://example.org/arm-boot-tutorial> a owl:Ontology ;
+  rdfs:label "ARM Boot Tutorial Ontology" .
+
+# Classes
+:Tutorial a owl:Class ;
+  rdfs:label "Tutorial" ;
+  rdfs:comment "The tutorial document" .
+
+:Prerequisite a owl:Class ;
+  rdfs:label "Prerequisite" ;
+  rdfs:comment "Requirements before starting the tutorial" .
+
+:TutorialStep a owl:Class ;
+  rdfs:label "Tutorial Step" ;
+  rdfs:comment "Steps in the tutorial" .
+
+:CodeExample a owl:Class ;
+  rdfs:label "Code Example" ;
+  rdfs:comment "Code examples in the tutorial" .
+
+:TroubleshootingTip a owl:Class ;
+  rdfs:label "Troubleshooting Tip" ;
+  rdfs:comment "Tips for troubleshooting" .
+
+:AdvancedTopic a owl:Class ;
+  rdfs:label "Advanced Topic" ;
+  rdfs:comment "Advanced topics covered" .
+
+:TutorialResource a owl:Class ;
+  rdfs:label "Tutorial Resource" ;
+  rdfs:comment "Resources mentioned in tutorial" .
+
+# Properties
+:hasPrerequisite a owl:ObjectProperty ;
+  rdfs:domain :Tutorial ;
+  rdfs:range :Prerequisite ;
+  rdfs:label "has Prerequisite" .
+
+:hasStep a owl:ObjectProperty ;
+  rdfs:domain :Tutorial ;
+  rdfs:range :TutorialStep ;
+  rdfs:label "has Step" .
+
+:containsExample a owl:ObjectProperty ;
+  rdfs:domain :TutorialStep ;
+  rdfs:range :CodeExample ;
+  rdfs:label "contains Example" .
+
+:hasTip a owl:ObjectProperty ;
+  rdfs:domain :Tutorial ;
+  rdfs:range :TroubleshootingTip ;
+  rdfs:label "has Tip" .
+
+:coversTopic a owl:ObjectProperty ;
+  rdfs:domain :Tutorial ;
+  rdfs:range :AdvancedTopic ;
+  rdfs:label "covers Topic" .
+
+:hasResource a owl:ObjectProperty ;
+  rdfs:domain :Tutorial ;
+  rdfs:range :TutorialResource ;
+  rdfs:label "has Resource" .
+
+:description a owl:DatatypeProperty ;
+  rdfs:domain owl:Thing ;
+  rdfs:range xsd:string ;
+  rdfs:label "description" .
+
+:stepNumber a owl:DatatypeProperty ;
+  rdfs:domain :TutorialStep ;
+  rdfs:range xsd:int ;
+  rdfs:label "step Number" .
+
+:codeContent a owl:DatatypeProperty ;
+  rdfs:domain :CodeExample ;
+  rdfs:range xsd:string ;
+  rdfs:label "code Content" .
+
+:language a owl:DatatypeProperty ;
+  rdfs:domain :CodeExample ;
+  rdfs:range xsd:string ;
+  rdfs:label "language" .
+
+# Instances
+:CustomBootloaderTutorial a :Tutorial ;
+  :description "Tutorial guiding through creating custom bootloaders for Raspberry Pi devices" .
+
+:ARMToolchain a :Prerequisite ;
+  :description "Raspberry Pi with ARM toolchain" .
+
+:BasicKnowledge a :Prerequisite ;
+  :description "Basic knowledge of ARM assembly and C" .
+
+:FirmwareSource a :Prerequisite ;
+  :description "Firmware source code (raspberrypi/rpi-bootloader)" .
+
+:UnderstandBootProcess a :TutorialStep ;
+  :stepNumber 1 ;
+  :description "Understanding the Boot Process - Before creating a custom bootloader, understand the standard boot sequence: 1. ROM loads bootcode.bin 2. bootcode.bin initializes SDRAM 3. start.elf configures hardware 4. Kernel boots" .
+
+:SetupDevEnvironment a :TutorialStep ;
+  :stepNumber 2 ;
+  :description "Setting Up Development Environment - Install ARM toolchain and clone firmware repo" .
+
+:ModifyBootcode a :TutorialStep ;
+  :stepNumber 3 ;
+  :description "Modifying Bootcode.bin - Bootcode.bin is the second-stage bootloader. To customize: 1. Locate bootcode.bin source in the repo 2. Modify the SDRAM initialization code 3. Recompile with make" .
+
+:CustomStartElf a :TutorialStep ;
+  :stepNumber 4 ;
+  :description "Custom Start.elf - Start.elf handles GPU firmware and hardware init: 1. Modify start.elf source 2. Add custom hardware initialization 3. Change boot options" .
+
+:BuildAndTest a :TutorialStep ;
+  :stepNumber 5 ;
+  :description "Building and Testing - Build custom bootloader, copy to SD card, test boot and monitor serial output" .
+
+:AddSecureBoot a :TutorialStep ;
+  :stepNumber 6 ;
+  :description "Adding Secure Boot - For secure boot support: 1. Generate key pair 2. Sign your custom bootloader 3. Program OTP with public key hash" .
+
+:SDRAMInitExample a :CodeExample ;
+  :language "c" ;
+  :codeContent "void init_sdram() {\n    // Custom SDRAM timing\n    set_timing(optimized_values);\n    // Add debug output\n    uart_puts(\"Custom SDRAM init\\n\");\n}" ;
+  :description "Example modification for SDRAM initialization in bootcode.bin" .
+
+:HardwareInitExample a :CodeExample ;
+  :language "c" ;
+  :codeContent "void hardware_init() {\n    // Initialize custom peripherals\n    gpio_init();\n    // Load custom overlays\n    load_device_tree(\"custom.dtb\");\n}" ;
+  :description "Example for custom hardware initialization in start.elf" .
+
+:BuildCommandsExample a :CodeExample ;
+  :language "bash" ;
+  :codeContent "# Build custom bootloader\nmake\n\n# Copy to SD card\ncp bootcode.bin /media/boot/\ncp start.elf /media/boot/\n\n# Test boot\n# Monitor serial output for custom messages" ;
+  :description "Commands for building and testing custom bootloader" .
+
+:SecureBootCommandsExample a :CodeExample ;
+  :language "bash" ;
+  :codeContent "# Generate keys\nopenssl ecparam -genkey -name prime256v1 -out private.pem\nopenssl ec -in private.pem -pubout -out public.pem\n\n# Sign bootloader\nopenssl dgst -sha256 -sign private.pem -out bootcode.sig bootcode.bin" ;
+  :description "Commands for generating keys and signing bootloader for secure boot" .
+
+:CheckSerialLogs a :TroubleshootingTip ;
+  :description "If boot fails, check serial logs" .
+
+:CorrectFilePlacement a :TroubleshootingTip ;
+  :description "Ensure correct file placement on boot partition" .
+
+:VerifyToolchain a :TroubleshootingTip ;
+  :description "Verify toolchain compatibility" .
+
+:NetworkBooting a :AdvancedTopic ;
+  :description "Network booting capabilities" .
+
+:USBbootCustomization a :AdvancedTopic ;
+  :description "USB boot customization options" .
+
+:DeviceTreeModifications a :AdvancedTopic ;
+  :description "Device tree modifications for custom hardware" .
+
+:RPiFirmwareDocs a :TutorialResource ;
+  :description "Raspberry Pi Firmware Docs" .
+
+:ARMBootloaderRef a :TutorialResource ;
+  :description "ARM Bootloader Reference" .
+
+:CommunityForums a :TutorialResource ;
+  :description "Community Forums for support" .
+
+# Relationships
+:CustomBootloaderTutorial :hasPrerequisite :ARMToolchain, :BasicKnowledge, :FirmwareSource .
+:CustomBootloaderTutorial :hasStep :UnderstandBootProcess, :SetupDevEnvironment, :ModifyBootcode, :CustomStartElf, :BuildAndTest, :AddSecureBoot .
+:ModifyBootcode :containsExample :SDRAMInitExample .
+:CustomStartElf :containsExample :HardwareInitExample .
+:BuildAndTest :containsExample :BuildCommandsExample .
+:AddSecureBoot :containsExample :SecureBootCommandsExample .
+:CustomBootloaderTutorial :hasTip :CheckSerialLogs, :CorrectFilePlacement, :VerifyToolchain .
+:CustomBootloaderTutorial :coversTopic :NetworkBooting, :USBbootCustomization, :DeviceTreeModifications .
+:CustomBootloaderTutorial :hasResource :RPiFirmwareDocs, :ARMBootloaderRef, :CommunityForums .

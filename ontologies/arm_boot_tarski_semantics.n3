@@ -1,0 +1,117 @@
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix : <http://example.org/arm-boot-tarski#> .
+
+# Tarski Semantics Ontology for ARM Bootloader FSA
+# Based on Tarski's model theory: truth conditions and semantic interpretations
+
+# Tarski Model Theory Concepts
+:TarskiModel a owl:Class ;
+    rdfs:label "Tarski Model" ;
+    rdfs:comment "A model in Tarski's sense: domain, interpretation function, satisfaction relation" .
+
+:Domain a owl:Class ;
+    rdfs:label "Domain of Discourse" ;
+    rdfs:comment "The universe of objects in the model" .
+
+:InterpretationFunction a owl:Class ;
+    rdfs:label "Interpretation Function" ;
+    rdfs:comment "Maps symbols to elements of the domain" .
+
+:SatisfactionRelation a owl:Class ;
+    rdfs:label "Satisfaction Relation" ;
+    rdfs:comment "Relates formulas to their truth values in the model" .
+
+# Bootloader FSA States as Tarski Models
+:BootStateModel a :TarskiModel ;
+    :hasDomain :BootStateDomain ;
+    :hasInterpretation :BootStateInterpretation ;
+    :hasSatisfaction :BootStateSatisfaction .
+
+:BootStateDomain a :Domain ;
+    :contains :STATE_BOOTCODE_LOADING, :STATE_BOOTCODE_EXEC,
+              :STATE_STARTELF_LOADING, :STATE_STARTELF_EXEC,
+              :STATE_KERNEL_LOADING, :STATE_KERNEL_EXEC,
+              :STATE_SUCCESS, :STATE_FAILURE .
+
+# State Interpretations (Tarski's semantic values)
+:STATE_BOOTCODE_LOADING :semanticValue "Initial state: preparing to load bootcode" ;
+    :truthCondition "SD card accessible and bootcode file exists" .
+
+:STATE_BOOTCODE_EXEC :semanticValue "Executing bootcode: initializing hardware" ;
+    :truthCondition "Bootcode loaded successfully and execution begins" .
+
+:STATE_STARTELF_LOADING :semanticValue "Loading start.elf: VideoCore firmware" ;
+    :truthCondition "Bootcode execution completed successfully" .
+
+:STATE_STARTELF_EXEC :semanticValue "Executing start.elf: hardware initialization" ;
+    :truthCondition "Start.elf loaded and ready for execution" .
+
+:STATE_KERNEL_LOADING :semanticValue "Loading Linux kernel image" ;
+    :truthCondition "Start.elf execution completed and kernel file accessible" .
+
+:STATE_KERNEL_EXEC :semanticValue "Executing kernel: handover to OS" ;
+    :truthCondition "Kernel loaded and device tree prepared" .
+
+:STATE_SUCCESS :semanticValue "Boot process completed successfully" ;
+    :truthCondition "Kernel handover successful" .
+
+:STATE_FAILURE :semanticValue "Boot process failed" ;
+    :truthCondition "Any critical error occurred during boot sequence" .
+
+# Transition Truth Conditions
+:TransitionTruth a owl:Class ;
+    rdfs:label "Transition Truth Condition" .
+
+:BootcodeLoadToExec :TransitionTruth ;
+    :fromState :STATE_BOOTCODE_LOADING ;
+    :toState :STATE_BOOTCODE_EXEC ;
+    :truthCondition "SD initialization successful" .
+
+:BootcodeExecToStartelfLoad :TransitionTruth ;
+    :fromState :STATE_BOOTCODE_EXEC ;
+    :toState :STATE_STARTELF_LOADING ;
+    :truthCondition "Bootcode execution completes without error" .
+
+:StartelfLoadToExec :TransitionTruth ;
+    :fromState :STATE_STARTELF_LOADING ;
+    :toState :STATE_STARTELF_EXEC ;
+    :truthCondition "Start.elf file loaded successfully" .
+
+:StartelfExecToKernelLoad :TransitionTruth ;
+    :fromState :STATE_STARTELF_EXEC ;
+    :toState :STATE_KERNEL_LOADING ;
+    :truthCondition "Start.elf execution completes hardware initialization" .
+
+:KernelLoadToExec :TransitionTruth ;
+    :fromState :STATE_KERNEL_LOADING ;
+    :toState :STATE_KERNEL_EXEC ;
+    :truthCondition "Kernel image and initrd loaded successfully" .
+
+:KernelExecToSuccess :TransitionTruth ;
+    :fromState :STATE_KERNEL_EXEC ;
+    :toState :STATE_SUCCESS ;
+    :truthCondition "Kernel handover completes successfully" .
+
+# Error Transitions
+:AnyToFailure :TransitionTruth ;
+    :fromState :BootStateDomain ;  # Any state
+    :toState :STATE_FAILURE ;
+    :truthCondition "Critical error occurs (SD failure, file not found, etc.)" .
+
+# Tarski's Satisfaction Relation
+:BootStateSatisfaction a :SatisfactionRelation ;
+    :satisfies :TransitionTruth .
+
+# Semantic Consistency Axioms
+:SemanticConsistency a owl:Class ;
+    rdfs:label "Semantic Consistency" .
+
+:StateTransitionConsistency :SemanticConsistency ;
+    :ensures "Each state transition preserves semantic meaning" ;
+    :validates "Truth conditions are maintained across state changes" .
+
+:ErrorHandlingConsistency :SemanticConsistency ;
+    :ensures "Error states have well-defined truth conditions" ;
+    :validates "Failure modes are semantically distinguishable" .

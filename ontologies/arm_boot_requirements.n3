@@ -1,0 +1,130 @@
+@prefix : <http://example.org/arm-boot-requirements#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# Ontology for ARM Boot Requirements Engineering
+<http://example.org/arm-boot-requirements> a owl:Ontology ;
+  rdfs:label "ARM Boot Requirements Ontology" .
+
+# Classes
+:Stakeholder a owl:Class ;
+  rdfs:label "Stakeholder" ;
+  rdfs:comment "Entities with interest in the boot process" .
+
+:Requirement a owl:Class ;
+  rdfs:label "Requirement" ;
+  rdfs:comment "Specifications that the system must meet" .
+
+:FunctionalRequirement a owl:Class ;
+  rdfs:subClassOf :Requirement ;
+  rdfs:label "Functional Requirement" ;
+  rdfs:comment "Requirements specifying what the system should do" .
+
+:NonFunctionalRequirement a owl:Class ;
+  rdfs:subClassOf :Requirement ;
+  rdfs:label "Non-Functional Requirement" ;
+  rdfs:comment "Requirements specifying how the system should perform" .
+
+:BootProcess a owl:Class ;
+  rdfs:label "Boot Process" ;
+  rdfs:comment "The boot process entity" .
+
+# Properties
+:hasRequirement a owl:ObjectProperty ;
+  rdfs:domain :Stakeholder ;
+  rdfs:range :Requirement ;
+  rdfs:label "has Requirement" .
+
+:satisfies a owl:ObjectProperty ;
+  rdfs:domain :BootProcess ;
+  rdfs:range :Requirement ;
+  rdfs:label "satisfies" .
+
+:dependsOn a owl:ObjectProperty ;
+  rdfs:domain :Requirement ;
+  rdfs:range :Requirement ;
+  rdfs:label "depends On" .
+
+:description a owl:DatatypeProperty ;
+  rdfs:domain :Requirement ;
+  rdfs:range xsd:string ;
+  rdfs:label "description" .
+
+# Instances - Stakeholders
+:RaspberryPiFoundation a :Stakeholder ;
+  rdfs:label "Raspberry Pi Foundation" .
+
+:EndUsers a :Stakeholder ;
+  rdfs:label "End Users" .
+
+:SoftwareDevelopers a :Stakeholder ;
+  rdfs:label "Software Developers" .
+
+:HardwareManufacturers a :Stakeholder ;
+  rdfs:label "Hardware Manufacturers" .
+
+:OpenSourceCommunity a :Stakeholder ;
+  rdfs:label "Open-Source Community" .
+
+:SecurityResearchers a :Stakeholder ;
+  rdfs:label "Security Researchers" .
+
+# Instances - Functional Requirements
+:LoadROM a :FunctionalRequirement ;
+  :description "The boot process must load the ROM code first" .
+
+:LoadBootcode a :FunctionalRequirement ;
+  :description "Must load bootcode.bin from boot media" ;
+  :dependsOn :LoadROM .
+
+:ExecuteStartElf a :FunctionalRequirement ;
+  :description "Must execute start.elf to initialize hardware" ;
+  :dependsOn :LoadBootcode .
+
+:LoadKernel a :FunctionalRequirement ;
+  :description "Must load and execute the kernel" ;
+  :dependsOn :ExecuteStartElf .
+
+:SupportBootMedia a :FunctionalRequirement ;
+  :description "Support booting from SD card, USB, NVMe" .
+
+:SupportArchitectures a :FunctionalRequirement ;
+  :description "Support ARM32 and ARM64 architectures" .
+
+:HandleConfigFiles a :FunctionalRequirement ;
+  :description "Handle configuration files like config.txt and cmdline.txt" .
+
+# Instances - Non-Functional Requirements
+:MinimalBootTime a :NonFunctionalRequirement ;
+  :description "Boot time should be minimal" .
+
+:SecureBoot a :NonFunctionalRequirement ;
+  :description "Secure boot to prevent unauthorized code execution" .
+
+:ReliableBoot a :NonFunctionalRequirement ;
+  :description "Reliable across different Raspberry Pi models" .
+
+:OSCompatibility a :NonFunctionalRequirement ;
+  :description "Compatible with various operating systems" .
+
+:EnergyEfficient a :NonFunctionalRequirement ;
+  :description "Energy efficient boot process" .
+
+# Boot Process Instance
+:ARMNativeBootProcess a :BootProcess ;
+  :satisfies :LoadROM, :LoadBootcode, :ExecuteStartElf, :LoadKernel, :SupportBootMedia, :SupportArchitectures, :HandleConfigFiles, :MinimalBootTime, :SecureBoot, :ReliableBoot, :OSCompatibility, :EnergyEfficient .
+
+# Stakeholder Requirements
+:RaspberryPiFoundation :hasRequirement :LoadROM, :LoadBootcode, :ExecuteStartElf, :LoadKernel, :SupportBootMedia, :SupportArchitectures, :HandleConfigFiles, :MinimalBootTime, :SecureBoot, :ReliableBoot .
+
+:EndUsers :hasRequirement :MinimalBootTime, :ReliableBoot, :OSCompatibility .
+
+:SoftwareDevelopers :hasRequirement :SupportArchitectures, :HandleConfigFiles, :OSCompatibility .
+
+:HardwareManufacturers :hasRequirement :LoadROM, :SupportBootMedia .
+
+:OpenSourceCommunity :hasRequirement :SecureBoot, :EnergyEfficient .
+
+:SecurityResearchers :hasRequirement :SecureBoot .

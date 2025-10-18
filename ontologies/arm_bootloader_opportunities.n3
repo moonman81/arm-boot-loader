@@ -1,0 +1,210 @@
+@prefix : <http://example.org/arm-bootloader-opportunities#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# Ontology for Bootloader Implementation Opportunities
+<http://example.org/arm-bootloader-opportunities> a owl:Ontology ;
+  rdfs:label "Bootloader Opportunities Ontology" .
+
+# Classes
+:Opportunity a owl:Class ;
+  rdfs:label "Opportunity" ;
+  rdfs:comment "Potential improvements" .
+
+:Area a owl:Class ;
+  rdfs:label "Area" ;
+  rdfs:comment "Areas for opportunities" .
+
+# Properties
+:improvesArea a owl:ObjectProperty ;
+  rdfs:domain :Opportunity ;
+  rdfs:range :Area ;
+  rdfs:label "improves Area" .
+
+:hasFeasibility a owl:DatatypeProperty ;
+  rdfs:domain :Opportunity ;
+  rdfs:range xsd:string ;
+  rdfs:label "has Feasibility" .
+
+:hasBenefit a owl:DatatypeProperty ;
+  rdfs:domain :Opportunity ;
+  rdfs:range xsd:string ;
+  rdfs:label "has Benefit" .
+
+:description a owl:DatatypeProperty ;
+  rdfs:domain :Opportunity ;
+  rdfs:range xsd:string ;
+  rdfs:label "description" .
+
+# Instances - Areas
+:Implementation a :Area ;
+  rdfs:label "Implementation" .
+
+:Testing a :Area ;
+  rdfs:label "Testing" .
+
+:Security a :Area ;
+  rdfs:label "Security" .
+
+:Filesystem a :Area ;
+  rdfs:label "Filesystem Support" .
+
+:Partitioning a :Area ;
+  rdfs:label "Partition Table Support" .
+
+:GPIO a :Area ;
+  rdfs:label "GPIO Support" .
+
+:USB a :Area ;
+  rdfs:label "USB Support" .
+
+:USBMSC a :Opportunity ;
+  :improvesArea :USB ;
+  :hasFeasibility "Completed" ;
+  :hasBenefit "High" ;
+  :description "Full USB Mass Storage Class implementation with device enumeration, SCSI command handling, and boot support" .
+
+:IPv6NetworkStack a :Opportunity ;
+  :improvesArea :Implementation ;
+  :hasFeasibility "Completed" ;
+  :hasBenefit "High" ;
+  :description "Complete IPv6 network stack implementation with link-local addressing, neighbor discovery, UDP over IPv6, and checksum validation" .
+
+:IPv6PXESupport a :Opportunity ;
+  :improvesArea :Implementation ;
+  :hasFeasibility "Completed" ;
+  :hasBenefit "High" ;
+  :description "IPv6 PXE boot support (RFC 5970) with DHCPv6-based network boot program loading and enterprise network booting capabilities" .
+
+:NeighborDiscovery a :Opportunity ;
+  :improvesArea :Implementation ;
+  :hasFeasibility "Completed" ;
+  :hasBenefit "Medium" ;
+  :description "IPv6 Neighbor Discovery protocol implementation for address resolution and network neighbor management" .
+
+:I2C a :Area ;
+  rdfs:label "I2C Support" .
+
+:Memory a :Area ;
+  rdfs:label "Memory Management" .
+
+:HID a :Area ;
+  rdfs:label "Human Interface Device Support" .
+
+:Performance a :Area ;
+  rdfs:label "Performance" .
+
+:Usability a :Area ;
+  rdfs:label "Usability" .
+
+# Instances - Completed Opportunities
+:GPIOFullSupport a :Opportunity ;
+  :improvesArea :GPIO ;
+  :hasFeasibility "Completed" ;
+  :hasBenefit "High" ;
+  :description "Full GPIO support with comprehensive testing for all functions, interrupts, and pull-up/down" .
+
+:FATVariantsSupport a :Opportunity ;
+  :improvesArea :Filesystem ;
+  :hasFeasibility "Completed" ;
+  :hasBenefit "High" ;
+  :description "Support for all MS-DOS/Windows FAT variants: FAT12, FAT16, FAT32, and exFAT" .
+
+:PartitionTableSupport a :Opportunity ;
+  :improvesArea :Partitioning ;
+  :hasFeasibility "Completed" ;
+  :hasBenefit "High" ;
+  :description "Full MBR and GPT partition table support for ARM devices including Raspberry Pi" .
+
+:FlexibleFSA a :Opportunity ;
+  :improvesArea :Implementation ;
+  :hasFeasibility "Completed" ;
+  :hasBenefit "High" ;
+  :description "Hyper-flexible FSA with 32 intermediate states supporting alternative boot paths and modular components" .
+
+:ConfigurableBootloader a :Opportunity ;
+  :improvesArea :Usability ;
+  :hasFeasibility "Completed" ;
+  :hasBenefit "High" ;
+  :description "Configuration-driven bootloader with support for alternative boot sources and advanced options" .
+
+# Instances - Opportunities
+:FormalVerificationOpp a :Opportunity ;
+  :improvesArea :Testing ;
+  :hasFeasibility "Medium" ;
+  :hasBenefit "High" ;
+  :description "Implement formal verification against FSA model using mathematical proofs" .
+
+:ComprehensiveTestingOpp a :Opportunity ;
+  :improvesArea :Testing ;
+  :hasFeasibility "High" ;
+  :hasBenefit "High" ;
+  :description "Add comprehensive testing framework with QEMU and hardware tests" .
+
+:ToolIntegrationOpp a :Opportunity ;
+  :improvesArea :Usability ;
+  :hasFeasibility "Medium" ;
+  :hasBenefit "Medium" ;
+  :description "Integrate with existing development tools and IDEs" .
+
+:SizeOptimizationOpp a :Opportunity ;
+  :improvesArea :Performance ;
+  :hasFeasibility "High" ;
+  :hasBenefit "Medium" ;
+  :description "Optimize for minimal size and fast boot times" .
+
+:NetworkBootOpp a :Opportunity ;
+  :improvesArea :Implementation ;
+  :hasFeasibility "Production-Ready" ;
+  :hasBenefit "High" ;
+  :description "Full network stack with ARP, DHCP/BOOTP clients, TFTP client, packet processing, and comprehensive security validation" .
+
+:PXE_BootOpp a :Opportunity ;
+  :improvesArea :Implementation ;
+  :hasFeasibility "Completed" ;
+  :hasBenefit "High" ;
+  :description "PXE boot support with DHCP vendor extensions, NBP download via TFTP, and enterprise network booting capabilities" .
+
+:MultiCoreOpp a :Opportunity ;
+  :improvesArea :Performance ;
+  :hasFeasibility "Medium" ;
+  :hasBenefit "High" ;
+  :description "Implement multi-core initialization and SMP support" .
+
+:AdvancedSecurityOpp a :Opportunity ;
+  :improvesArea :Security ;
+  :hasFeasibility "Low" ;
+  :hasBenefit "High" ;
+  :description "Add advanced security features like TPM integration" .
+
+:PowerManagementOpp a :Opportunity ;
+  :improvesArea :Performance ;
+  :hasFeasibility "Medium" ;
+  :hasBenefit "Medium" ;
+  :description "Integrate power management for energy efficiency" .
+
+:ModularDesignOpp a :Opportunity ;
+  :improvesArea :Implementation ;
+  :hasFeasibility "Completed" ;
+  :hasBenefit "High" ;
+  :description "Implemented modular loading states in FSA with kernel module loading and validation" .
+
+:PerformanceBenchmarkingOpp a :Opportunity ;
+  :improvesArea :Performance ;
+  :hasFeasibility "Completed" ;
+  :hasBenefit "Medium" ;
+  :description "Added boot time measurement and performance tracking to bootloader" .
+
+:HardwareTestingOpp a :Opportunity ;
+  :improvesArea :Testing ;
+  :hasFeasibility "Completed" ;
+  :hasBenefit "High" ;
+  :description "Created comprehensive hardware testing framework with UART monitoring and automated test scripts" .
+
+:DocumentationOpp a :Opportunity ;
+  :improvesArea :Usability ;
+  :hasFeasibility "High" ;
+  :hasBenefit "High" ;
+  :description "Create comprehensive documentation and tutorials" .

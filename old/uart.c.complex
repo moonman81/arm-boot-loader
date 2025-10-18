@@ -1,0 +1,159 @@
+/* UART Implementation for Raspberry Pi */
+
+#include "hardware.h"
+#include "uart.h"
+#include "timer.h"
+
+#define UART_DR_OFFSET   0x00
+#define UART_FR_OFFSET   0x18
+#define UART_IBRD_OFFSET 0x24
+#define UART_FBRD_OFFSET 0x28
+#define UART_LCRH_OFFSET 0x2C
+#define UART_CR_OFFSET   0x30
+#define UART_IMSC_OFFSET 0x38  // Interrupt mask
+
+// Flag register bits
+#define UART_FR_RXFE (1 << 4)  // RX FIFO empty
+#define UART_FR_TXFF (1 << 5)  // TX FIFO full
+#define UART_FR_RXFF (1 << 6)  // RX FIFO full
+
+// Data register bits
+#define UART_DR_FE   (1 << 8)  // Framing error
+#define UART_DR_PE   (1 << 9)  // Parity error
+#define UART_DR_BE   (1 << 10) // Break error
+#define UART_DR_OE   (1 << 11) // Overrun error
+
+void uart_init(void) {
+    volatile unsigned int *reg;
+    uint32_t uart_base = get_uart_base();
+
+    // Enable UART
+    reg = (volatile unsigned int *)(uart_base + UART_CR_OFFSET);
+    *reg = 0x00000000; // Disable UART
+
+    // Set baud rate (115200)
+    reg = (volatile unsigned int *)(uart_base + UART_IBRD_OFFSET);
+    *reg = 26;
+    reg = (volatile unsigned int *)(uart_base + UART_FBRD_OFFSET);
+    *reg = 3;
+
+    // Set data format
+    reg = (volatile unsigned int *)(uart_base + UART_LCRH_OFFSET);
+    *reg = (0x3 << 5) | (0x1 << 4); // 8 bits, no parity, 1 stop bit
+
+    // Enable UART
+    reg = (volatile unsigned int *)(uart_base + UART_CR_OFFSET);
+    *reg = 0x00000301; // Enable UART, TX, RX
+}
+
+void uart_putc(char c) {
+    volatile unsigned int *reg;
+    uint32_t uart_base = get_uart_base();
+
+    // Wait for TX FIFO not full
+    do {
+        reg = (volatile unsigned int *)(uart_base + UART_FR_OFFSET);
+    } while (*reg & UART_FR_TXFF);
+
+    // Send character
+    reg = (volatile unsigned int *)(uart_base + UART_DR_OFFSET);
+    *reg = c;
+}
+
+void uart_puts(const char *s) {
+    while (*s) {
+        uart_putc(*s++);
+    }
+}
+
+// Check if character available (non-blocking)
+int uart_available(void) {
+    volatile unsigned int *reg;
+    uint32_t uart_base = get_uart_base();
+
+    reg = (volatile unsigned int *)(uart_base + UART_FR_OFFSET);
+    return !(*reg & UART_FR_RXFE); // Return 1 if RX FIFO not empty
+}
+
+// Blocking character receive
+char uart_getc(void) {
+    volatile unsigned int *reg;
+    uint32_t uart_base = get_uart_base();
+    uint32_t data;
+
+    // Wait for RX FIFO not empty
+    do {
+        reg = (volatile unsigned int *)(uart_base + UART_FR_OFFSET);
+    } while (*reg & UART_FR_RXFE);
+
+    // Read character
+    reg = (volatile unsigned int *)(uart_base + UART_DR_OFFSET);
+    data = *reg;
+
+    // Check for errors
+    if (data & (UART_DR_FE | UART_DR_PE | UART_DR_BE | UART_DR_OE)) {
+        // Error occurred, return 0 or handle appropriately
+        return 0;
+    }
+
+    return (char)(data & 0xFF);
+}
+
+// Receive with timeout
+int uart_getc_timeout(char *c, uint32_t timeout_ms) {
+    uint64_t start = timer_get_counter();
+    uint64_t timeout_us = (uint64_t)timeout_ms * 1000;
+
+    while ((timer_get_counter() - start) < timeout_us) {
+        if (uart_available()) {
+            *c = uart_getc();
+            return 0; // Success
+        }
+    }
+
+    return -1; // Timeout
+}
+
+// Receive string until newline or max length
+void uart_gets(char *buffer, uint32_t max_len) {
+    uint32_t i = 0;
+    char c;
+
+    while (i < max_len - 1) {
+        c = uart_getc();
+
+        // Handle backspace
+        if (c == '\b' || c == 0x7F) {
+            if (i > 0) {
+                i--;
+                uart_puts("\b \b"); // Echo backspace
+            }
+            continue;
+        }
+
+        // Echo character
+        uart_putc(c);
+
+        // Check for newline
+        if (c == '\r' || c == '\n') {
+            uart_putc('\n'); // Echo newline
+            break;
+        }
+
+        buffer[i++] = c;
+    }
+
+    buffer[i] = '\0'; // Null terminate
+}
+
+// Flush receive buffer
+void uart_flush_rx(void) {
+    volatile unsigned int *reg;
+    uint32_t uart_base = get_uart_base();
+
+    // Read and discard all characters in RX FIFO
+    while (uart_available()) {
+        reg = (volatile unsigned int *)(uart_base + UART_DR_OFFSET);
+        (void)*reg; // Read and discard
+    }
+}

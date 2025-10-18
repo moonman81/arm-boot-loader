@@ -1,0 +1,61 @@
+/* GPIO Header for Raspberry Pi */
+
+#ifndef GPIO_H
+#define GPIO_H
+
+#include <stdint.h>
+#include "hardware.h"
+
+// GPIO register offsets
+#define GPIO_GPFSEL0_OFFSET   0x00
+#define GPIO_GPSET0_OFFSET    0x1C
+#define GPIO_GPCLR0_OFFSET    0x28
+#define GPIO_GPLEV0_OFFSET    0x34
+#define GPIO_GPEDS0_OFFSET    0x40
+#define GPIO_GPREN0_OFFSET    0x4C
+#define GPIO_GPFEN0_OFFSET    0x58
+#define GPIO_GPHEN0_OFFSET    0x64
+#define GPIO_GPLEN0_OFFSET    0x70
+#define GPIO_GPAREN0_OFFSET   0x7C
+#define GPIO_GPAFEN0_OFFSET   0x88
+#define GPIO_GPPUD_OFFSET     0x94
+#define GPIO_GPPUDCLK0_OFFSET 0x98
+
+// GPIO functions
+#define GPIO_FUNC_INPUT  0
+#define GPIO_FUNC_OUTPUT 1
+#define GPIO_FUNC_ALT0   4
+#define GPIO_FUNC_ALT1   5
+#define GPIO_FUNC_ALT2   6
+#define GPIO_FUNC_ALT3   7
+#define GPIO_FUNC_ALT4   3
+#define GPIO_FUNC_ALT5   2
+
+// GPIO pull-up/down
+#define GPIO_PUD_OFF     0
+#define GPIO_PUD_DOWN    1
+#define GPIO_PUD_UP      2
+
+// GPIO interrupt types
+#define GPIO_INT_RISING   0x01
+#define GPIO_INT_FALLING  0x02
+#define GPIO_INT_HIGH     0x04
+#define GPIO_INT_LOW      0x08
+#define GPIO_INT_ASYNC    0x10
+
+// GPIO pins
+#define GPIO_LED_PIN     42  // Activity LED on Pi 4
+#define GPIO_BTN_PIN     3   // Example button pin
+
+void gpio_init(void);
+void gpio_set_function(uint8_t pin, uint8_t function);
+void gpio_set_pull(uint8_t pin, uint8_t pud);
+void gpio_set(uint8_t pin);
+void gpio_clear(uint8_t pin);
+uint8_t gpio_read(uint8_t pin);
+void gpio_toggle(uint8_t pin);
+void gpio_enable_interrupt(uint8_t pin, uint8_t type);
+void gpio_disable_interrupt(uint8_t pin);
+void gpio_clear_interrupt(uint8_t pin);
+
+#endif

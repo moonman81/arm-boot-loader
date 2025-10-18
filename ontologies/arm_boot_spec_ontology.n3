@@ -1,0 +1,180 @@
+@prefix : <http://example.org/arm-boot-spec#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# Ontology for ARM Boot Specification Content
+<http://example.org/arm-boot-spec> a owl:Ontology ;
+  rdfs:label "ARM Boot Specification Ontology" .
+
+# Classes
+:Specification a owl:Class ;
+  rdfs:label "Specification" ;
+  rdfs:comment "The boot specification document" .
+
+:BootStageStandard a owl:Class ;
+  rdfs:label "Boot Stage Standard" ;
+  rdfs:comment "Standardized boot stages" .
+
+:RequiredFile a owl:Class ;
+  rdfs:label "Required File" ;
+  rdfs:comment "Files required for boot" .
+
+:ConfigurationSchema a owl:Class ;
+  rdfs:label "Configuration Schema" ;
+  rdfs:comment "Schema for config.txt" .
+
+:SecureBootExtension a owl:Class ;
+  rdfs:label "Secure Boot Extension" ;
+  rdfs:comment "Extensions for secure boot" .
+
+:CommunityInput a owl:Class ;
+  rdfs:label "Community Input" ;
+  rdfs:comment "Community contribution mechanisms" .
+
+:SpecReference a owl:Class ;
+  rdfs:label "Specification Reference" ;
+  rdfs:comment "References in the spec" .
+
+# Properties
+:hasVersion a owl:DatatypeProperty ;
+  rdfs:domain :Specification ;
+  rdfs:range xsd:string ;
+  rdfs:label "has Version" .
+
+:hasScope a owl:DatatypeProperty ;
+  rdfs:domain :Specification ;
+  rdfs:range xsd:string ;
+  rdfs:label "has Scope" .
+
+:definesStage a owl:ObjectProperty ;
+  rdfs:domain :Specification ;
+  rdfs:range :BootStageStandard ;
+  rdfs:label "defines Stage" .
+
+:requiresFile a owl:ObjectProperty ;
+  rdfs:domain :Specification ;
+  rdfs:range :RequiredFile ;
+  rdfs:label "requires File" .
+
+:hasSchema a owl:ObjectProperty ;
+  rdfs:domain :Specification ;
+  rdfs:range :ConfigurationSchema ;
+  rdfs:label "has Schema" .
+
+:hasExtension a owl:ObjectProperty ;
+  rdfs:domain :Specification ;
+  rdfs:range :SecureBootExtension ;
+  rdfs:label "has Extension" .
+
+:allowsInput a owl:ObjectProperty ;
+  rdfs:domain :Specification ;
+  rdfs:range :CommunityInput ;
+  rdfs:label "allows Input" .
+
+:hasSpecReference a owl:ObjectProperty ;
+  rdfs:domain :Specification ;
+  rdfs:range :SpecReference ;
+  rdfs:label "has Reference" .
+
+:description a owl:DatatypeProperty ;
+  rdfs:domain owl:Thing ;
+  rdfs:range xsd:string ;
+  rdfs:label "description" .
+
+:stageNumber a owl:DatatypeProperty ;
+  rdfs:domain :BootStageStandard ;
+  rdfs:range xsd:int ;
+  rdfs:label "stage Number" .
+
+:filePurpose a owl:DatatypeProperty ;
+  rdfs:domain :RequiredFile ;
+  rdfs:range xsd:string ;
+  rdfs:label "file Purpose" .
+
+:schemaContent a owl:DatatypeProperty ;
+  rdfs:domain :ConfigurationSchema ;
+  rdfs:range xsd:string ;
+  rdfs:label "schema Content" .
+
+:contributionMethod a owl:DatatypeProperty ;
+  rdfs:domain :CommunityInput ;
+  rdfs:range xsd:string ;
+  rdfs:label "contribution Method" .
+
+:specUrl a owl:DatatypeProperty ;
+  rdfs:domain :SpecReference ;
+  rdfs:range xsd:string ;
+  rdfs:label "spec Url" .
+
+# Instances
+:BootSpecification a :Specification ;
+  :hasVersion "1.0 - Initial release" ;
+  :hasScope "This specification covers the boot sequence, configuration, and firmware requirements for Raspberry Pi models 3, 4, and 5." ;
+  :description "Standardized boot specification for Raspberry Pi ARM devices, developed with community input" .
+
+:ROMStageStandard a :BootStageStandard ;
+  :stageNumber 1 ;
+  :description "Hardware-initialized code that loads bootcode.bin" .
+
+:BootloaderStageStandard a :BootStageStandard ;
+  :stageNumber 2 ;
+  :description "bootcode.bin initializes SDRAM and loads start.elf" .
+
+:FirmwareStageStandard a :BootStageStandard ;
+  :stageNumber 3 ;
+  :description "start.elf configures hardware and loads kernel" .
+
+:KernelStageStandard a :BootStageStandard ;
+  :stageNumber 4 ;
+  :description "Linux kernel initializes OS" .
+
+:BootcodeBinFile a :RequiredFile ;
+  :filePurpose "Bootloader binary" ;
+  :description "bootcode.bin: Bootloader binary" .
+
+:StartElfFile a :RequiredFile ;
+  :filePurpose "GPU firmware" ;
+  :description "start.elf: GPU firmware" .
+
+:ConfigTxtFile a :RequiredFile ;
+  :filePurpose "Boot configuration" ;
+  :description "config.txt: Boot configuration" .
+
+:KernelImgFile a :RequiredFile ;
+  :filePurpose "Linux kernel" ;
+  :description "kernel.img/kernel8.img: Linux kernel" .
+
+:ConfigSchema a :ConfigurationSchema ;
+  :schemaContent "# Basic configuration\nkernel=kernel.img\nramfsfile=initramfs.gz\ninitramfs initrd.img followkernel\n\n# Hardware settings\ngpu_mem=128\nhdmi_mode=1\ndtparam=audio=on\n\n# Boot options\nboot_delay=0\ndisable_splash=1" ;
+  :description "Standard schema for config.txt configuration file" .
+
+:OTPProgramming a :SecureBootExtension ;
+  :description "OTP bits must be programmed with key hash" .
+
+:FirmwareSigning a :SecureBootExtension ;
+  :description "All firmware signed with ECDSA" .
+
+:BootFailureOnVerification a :SecureBootExtension ;
+  :description "Boot failure on signature verification error" .
+
+:GitHubContributions a :CommunityInput ;
+  :contributionMethod "GitHub issues and pull requests" ;
+  :description "Open for community contributions via GitHub issues and pull requests" .
+
+:RPiFirmwareRef a :SpecReference ;
+  :specUrl "https://github.com/raspberrypi/firmware" ;
+  :description "Raspberry Pi Firmware repository" .
+
+:RPiBootloaderRef a :SpecReference ;
+  :specUrl "https://github.com/raspberrypi/rpi-bootloader" ;
+  :description "Bootloader Source Code" .
+
+# Relationships
+:BootSpecification :definesStage :ROMStageStandard, :BootloaderStageStandard, :FirmwareStageStandard, :KernelStageStandard .
+:BootSpecification :requiresFile :BootcodeBinFile, :StartElfFile, :ConfigTxtFile, :KernelImgFile .
+:BootSpecification :hasSchema :ConfigSchema .
+:BootSpecification :hasExtension :OTPProgramming, :FirmwareSigning, :BootFailureOnVerification .
+:BootSpecification :allowsInput :GitHubContributions .
+:BootSpecification :hasSpecReference :RPiFirmwareRef, :RPiBootloaderRef .

@@ -1,0 +1,69 @@
+@prefix : <http://example.org/arm-bootloading#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# Ontology for ARM Native Bootloading
+<http://example.org/arm-bootloading> a owl:Ontology ;
+  rdfs:label "ARM Native Bootloading Ontology" .
+
+# Classes
+:ARMProcessor a owl:Class ;
+  rdfs:label "ARM Processor" ;
+  rdfs:comment "Represents ARM-based processors" .
+
+:Bootloader a owl:Class ;
+  rdfs:label "Bootloader" ;
+  rdfs:comment "Software that initializes the hardware and loads the operating system" .
+
+:BootStage a owl:Class ;
+  rdfs:label "Boot Stage" ;
+  rdfs:comment "Stages in the boot process" .
+
+:Firmware a owl:Class ;
+  rdfs:label "Firmware" ;
+  rdfs:comment "Low-level software embedded in hardware" .
+
+:BootSequence a owl:Class ;
+  rdfs:label "Boot Sequence" ;
+  rdfs:comment "The sequence of boot stages" .
+
+# Properties
+:hasBootloader a owl:ObjectProperty ;
+  rdfs:domain :ARMProcessor ;
+  rdfs:range :Bootloader ;
+  rdfs:label "has Bootloader" .
+
+:supportsArchitecture a owl:DatatypeProperty ;
+  rdfs:domain :ARMProcessor ;
+  rdfs:range xsd:string ;
+  rdfs:label "supports Architecture" .
+
+:bootSequence a owl:ObjectProperty ;
+  rdfs:domain :Bootloader ;
+  rdfs:range :BootSequence ;
+  rdfs:label "boot Sequence" .
+
+:nextStage a owl:ObjectProperty ;
+  rdfs:domain :BootStage ;
+  rdfs:range :BootStage ;
+  rdfs:label "next Stage" .
+
+# Instances
+:RaspberryPi5 a :ARMProcessor ;
+  :supportsArchitecture "ARM64" ;
+  :hasBootloader :Pi5Bootloader .
+
+:Pi5Bootloader a :Bootloader ;
+  :bootSequence :Pi5BootSequence .
+
+:Pi5BootSequence a :BootSequence .
+
+:Stage1 a :BootStage ;
+  rdfs:label "ROM Boot" .
+
+:Stage2 a :BootStage ;
+  rdfs:label "Secondary Bootloader" .
+
+:Stage1 :nextStage :Stage2 .

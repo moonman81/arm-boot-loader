@@ -1,0 +1,83 @@
+/* Memory Manager Implementation for Bootloader */
+
+#include "memory.h"
+
+static mem_block_t *heap_start = NULL;
+static size_t heap_size = 0;
+
+void memory_init(void) {
+    // Initialize heap at BOOTLOADER_HEAP_START
+    heap_start = (mem_block_t*)BOOTLOADER_HEAP_START;
+    heap_size = BOOTLOADER_HEAP_SIZE;
+
+    // Create initial free block
+    heap_start->size = heap_size - sizeof(mem_block_t);
+    heap_start->free = 1;
+    heap_start->next = NULL;
+}
+
+void *memory_alloc(size_t size) {
+    if (!heap_start) return NULL;
+
+    // Align size to 4-byte boundary
+    size = (size + 3) & ~3;
+
+    mem_block_t *current = heap_start;
+
+    while (current) {
+        if (current->free && current->size >= size) {
+            // Found a suitable block
+            if (current->size > size + sizeof(mem_block_t)) {
+                // Split the block
+                mem_block_t *new_block = (mem_block_t*)((uint8_t*)current + sizeof(mem_block_t) + size);
+                new_block->size = current->size - size - sizeof(mem_block_t);
+                new_block->free = 1;
+                new_block->next = current->next;
+
+                current->size = size;
+                current->next = new_block;
+            }
+
+            current->free = 0;
+            return (void*)((uint8_t*)current + sizeof(mem_block_t));
+        }
+        current = current->next;
+    }
+
+    return NULL; // No suitable block found
+}
+
+void memory_free(void *ptr) {
+    if (!ptr || !heap_start) return;
+
+    mem_block_t *block = (mem_block_t*)((uint8_t*)ptr - sizeof(mem_block_t));
+    block->free = 1;
+
+    // Coalesce with next block if free
+    if (block->next && block->next->free) {
+        block->size += sizeof(mem_block_t) + block->next->size;
+        block->next = block->next->next;
+    }
+
+    // Coalesce with previous block if free (simplified - would need doubly linked list)
+}
+
+size_t memory_get_free(void) {
+    if (!heap_start) return 0;
+
+    size_t free_size = 0;
+    mem_block_t *current = heap_start;
+
+    while (current) {
+        if (current->free) {
+            free_size += current->size;
+        }
+        current = current->next;
+    }
+
+    return free_size;
+}
+
+size_t memory_get_used(void) {
+    return heap_size - memory_get_free() - sizeof(mem_block_t);
+}

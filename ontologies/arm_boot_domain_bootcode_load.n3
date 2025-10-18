@@ -1,0 +1,54 @@
+@prefix : <http://example.org/arm-boot-domain-bootcode-load#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# Ontology for BootcodeLoading State Domain
+<http://example.org/arm-boot-domain-bootcode-load> a owl:Ontology ;
+  rdfs:label "Bootcode Load Domain Ontology" .
+
+:DomainElement a owl:Class .
+:BootcodeProperty a owl:Class .
+:OrderRelation a owl:Class .
+
+:hasProperty a owl:ObjectProperty ;
+  rdfs:domain :DomainElement ;
+  rdfs:range :BootcodeProperty .
+
+:orderedBy a owl:ObjectProperty ;
+  rdfs:domain :DomainElement ;
+  rdfs:range :OrderRelation .
+
+:description a owl:DatatypeProperty ;
+  rdfs:domain owl:Thing ;
+  rdfs:range xsd:string .
+
+:NoFile a :DomainElement ;
+  :description "No bootcode.bin found" .
+
+:CorruptFile a :DomainElement ;
+  :description "bootcode.bin found but corrupt" .
+
+:ValidFile a :DomainElement ;
+  :description "bootcode.bin valid and ready to load" .
+
+:Loading a :DomainElement ;
+  :description "Currently loading bootcode.bin" .
+
+:Loaded a :DomainElement ;
+  :description "bootcode.bin successfully loaded" .
+
+:FileIntegrity a :BootcodeProperty ;
+  :description "Integrity check of file" .
+
+:FileSize a :BootcodeProperty ;
+  :description "Size of bootcode.bin" .
+
+:LoadProgress a :BootcodeProperty ;
+  :description "Progress of loading" .
+
+:NoFile :orderedBy :CorruptOrder .
+:CorruptFile :orderedBy :ValidOrder .
+:ValidFile :orderedBy :LoadingOrder .
+:Loading :orderedBy :LoadedOrder .

@@ -1,0 +1,104 @@
+@prefix : <http://example.org/rpi-boot#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+
+# Ontology for Raspberry Pi GPU Boot Phenomena
+
+:Phenomenon rdf:type owl:Class ;
+    rdfs:label "Boot Phenomenon" ;
+    rdfs:comment "A phenomenon in the boot process" .
+
+:GPU_Boot_Phenomenon rdf:type :Phenomenon ;
+    rdfs:label "Raspberry Pi GPU Boot Phenomenon" ;
+    rdfs:comment "The phenomenon where Raspberry Pi boots via VideoCore GPU before ARM CPU" .
+
+:Reason rdf:type owl:Class ;
+    rdfs:label "Reason" ;
+    rdfs:comment "A reason explaining a phenomenon" .
+
+:hasReason rdf:type owl:ObjectProperty ;
+    rdfs:domain :Phenomenon ;
+    rdfs:range :Reason .
+
+:causes rdf:type owl:ObjectProperty ;
+    rdfs:domain :Reason ;
+    rdfs:range :Phenomenon .
+
+# Specific reasons for GPU boot
+
+:Broadcom_SoC_Architecture rdf:type :Reason ;
+    rdfs:label "Broadcom SoC Architecture" ;
+    rdfs:comment "Broadcom BCM283x/BCM271x SoCs have VideoCore GPU as primary processor" .
+
+:GPU_Primary_Boot rdf:type :Reason ;
+    rdfs:label "GPU Primary Boot Processor" ;
+    rdfs:comment "VideoCore GPU boots first and initializes system" .
+
+:ARM_Secondary rdf:type :Reason ;
+    rdfs:label "ARM CPU Secondary" ;
+    rdfs:comment "ARM CPU is secondary processor, activated after GPU setup" .
+
+:SD_Card_Boot rdf:type :Reason ;
+    rdfs:label "SD Card Boot Source" ;
+    rdfs:comment "Boot firmware loaded from SD card by GPU" .
+
+:Firmware_Load_Process rdf:type :Reason ;
+    rdfs:label "Firmware Load Process" ;
+    rdfs:comment "GPU loads bootcode.bin, start.elf, config.txt, then kernel/bootloader" .
+
+:Hardware_Initialization rdf:type :Reason ;
+    rdfs:label "Hardware Initialization" ;
+    rdfs:comment "GPU initializes clocks, memory, peripherals before ARM boot" .
+
+:Bootloader_Handover rdf:type :Reason ;
+    rdfs:label "Bootloader Handover" ;
+    rdfs:comment "GPU loads bootloader at 0x80000 and jumps to it" .
+
+# Relations
+
+:GPU_Boot_Phenomenon :hasReason :Broadcom_SoC_Architecture .
+:GPU_Boot_Phenomenon :hasReason :GPU_Primary_Boot .
+:GPU_Boot_Phenomenon :hasReason :ARM_Secondary .
+:GPU_Boot_Phenomenon :hasReason :SD_Card_Boot .
+:GPU_Boot_Phenomenon :hasReason :Firmware_Load_Process .
+:GPU_Boot_Phenomenon :hasReason :Hardware_Initialization .
+:GPU_Boot_Phenomenon :hasReason :Bootloader_Handover .
+
+# Boot sequence
+
+:BootSequence rdf:type owl:Class ;
+    rdfs:label "Boot Sequence Step" .
+
+:Power_On rdf:type :BootSequence ;
+    rdfs:label "Power On" .
+
+:GPU_Boot rdf:type :BootSequence ;
+    rdfs:label "GPU Boot" .
+
+:SD_Read rdf:type :BootSequence ;
+    rdfs:label "SD Card Read" .
+
+:Firmware_Load rdf:type :BootSequence ;
+    rdfs:label "Firmware Load" .
+
+:ARM_Activate rdf:type :BootSequence ;
+    rdfs:label "ARM CPU Activation" .
+
+:Bootloader_Exec rdf:type :BootSequence ;
+    rdfs:label "Bootloader Execution" .
+
+:Kernel_Handover rdf:type :BootSequence ;
+    rdfs:label "Kernel Handover" .
+
+# Sequence relations
+:Power_On :nextStep :GPU_Boot .
+:GPU_Boot :nextStep :SD_Read .
+:SD_Read :nextStep :Firmware_Load .
+:Firmware_Load :nextStep :ARM_Activate .
+:ARM_Activate :nextStep :Bootloader_Exec .
+:Bootloader_Exec :nextStep :Kernel_Handover .
+
+:nextStep rdf:type owl:ObjectProperty ;
+    rdfs:domain :BootSequence ;
+    rdfs:range :BootSequence .

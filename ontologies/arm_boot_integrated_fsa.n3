@@ -1,0 +1,155 @@
+@prefix : <http://example.org/arm-boot-integrated-fsa#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# Integrated Mathematical FSA Ontology for ARM Boot
+<http://example.org/arm-boot-integrated-fsa> a owl:Ontology ;
+  rdfs:label "Integrated FSA Ontology" .
+
+# Classes
+:FSATransition a owl:Class ;
+  rdfs:label "FSA Transition" ;
+  rdfs:comment "Transitions in the boot FSA" .
+
+:KripkeModel a owl:Class ;
+  rdfs:label "Kripke Model" ;
+  rdfs:comment "Modal logic model" .
+
+:TarskiModel a owl:Class ;
+  rdfs:label "Tarski Model" ;
+  rdfs:comment "Truth model" .
+
+:CategoryModel a owl:Class ;
+  rdfs:label "Category Model" ;
+  rdfs:comment "Category theory model" .
+
+:DomainModel a owl:Class ;
+  rdfs:label "Domain Model" ;
+  rdfs:comment "Scott domain model" .
+
+:TypeModel a owl:Class ;
+  rdfs:label "Type Model" ;
+  rdfs:comment "Type theory model" .
+
+:HomotopyModel a owl:Class ;
+  rdfs:label "Homotopy Model" ;
+  rdfs:comment "Homotopy theory model" .
+
+# Properties
+:hasKripke a owl:ObjectProperty ;
+  rdfs:domain :FSATransition ;
+  rdfs:range :KripkeModel ;
+  rdfs:label "has Kripke" .
+
+:hasTarski a owl:ObjectProperty ;
+  rdfs:domain :FSATransition ;
+  rdfs:range :TarskiModel ;
+  rdfs:label "has Tarski" .
+
+:hasCategory a owl:ObjectProperty ;
+  rdfs:domain :FSATransition ;
+  rdfs:range :CategoryModel ;
+  rdfs:label "has Category" .
+
+:hasDomain a owl:ObjectProperty ;
+  rdfs:domain :FSATransition ;
+  rdfs:range :DomainModel ;
+  rdfs:label "has Domain" .
+
+:hasType a owl:ObjectProperty ;
+  rdfs:domain :FSATransition ;
+  rdfs:range :TypeModel ;
+  rdfs:label "has Type" .
+
+:hasHomotopy a owl:ObjectProperty ;
+  rdfs:domain :FSATransition ;
+  rdfs:range :HomotopyModel ;
+  rdfs:label "has Homotopy" .
+
+:description a owl:DatatypeProperty ;
+  rdfs:domain owl:Thing ;
+  rdfs:range xsd:string ;
+  rdfs:label "description" .
+
+# Instances - FSA Transitions (from earlier FSA)
+:T1 a :FSATransition ;
+  :description "PowerOn to ROMExecution" .
+
+:T2 a :FSATransition ;
+  :description "ROMExecution to BootcodeLoading" .
+
+:T3 a :FSATransition ;
+  :description "ROMExecution to NoBootMedia" .
+
+:T4 a :FSATransition ;
+  :description "BootcodeLoading to BootcodeExecution" .
+
+:T5 a :FSATransition ;
+  :description "BootcodeLoading to FirmwareCorrupt" .
+
+:T6 a :FSATransition ;
+  :description "BootcodeExecution to StartElfLoading" .
+
+:T7 a :FSATransition ;
+  :description "BootcodeExecution to HardwareFail" .
+
+:T8 a :FSATransition ;
+  :description "StartElfLoading to StartElfExecution" .
+
+:T9 a :FSATransition ;
+  :description "StartElfLoading to FirmwareCorrupt" .
+
+:T10 a :FSATransition ;
+  :description "StartElfExecution to KernelLoading" .
+
+:T11 a :FSATransition ;
+  :description "StartElfExecution to HardwareFail" .
+
+:T12 a :FSATransition ;
+  :description "KernelLoading to KernelExecution" .
+
+:T13 a :FSATransition ;
+  :description "KernelLoading to FirmwareCorrupt" .
+
+:T14 a :FSATransition ;
+  :description "KernelExecution to BootSuccess" .
+
+:T15 a :FSATransition ;
+  :description "KernelExecution to HardwareFail" .
+
+# Integrated Models for each Transition
+:T1_Kripke a :KripkeModel ;
+  :description "□ PowerStable for T1" .
+
+:T1_Tarski a :TarskiModel ;
+  :description "Truth: PowerStable ⊨ ROMActive" .
+
+:T1_Category a :CategoryModel ;
+  :description "Morphism: PowerStable → ROMExecution" .
+
+:T1_Domain a :DomainModel ;
+  :description "Domain order: PowerOff ⊏ ROMExecution" .
+
+:T1_Type a :TypeModel ;
+  :description "Function: PowerOn → ROMType" .
+
+:T1_Homotopy a :HomotopyModel ;
+  :description "Path: PowerOn to ROM" .
+
+# Attach to T1
+:T1 :hasKripke :T1_Kripke ;
+  :hasTarski :T1_Tarski ;
+  :hasCategory :T1_Category ;
+  :hasDomain :T1_Domain ;
+  :hasType :T1_Type ;
+  :hasHomotopy :T1_Homotopy .
+
+# Similarly for other transitions (abbreviated for brevity)
+:T2_Kripke a :KripkeModel ;
+  :description "◇ BootMediaFound for T2" .
+
+:T2 :hasKripke :T2_Kripke .
+
+# And so on for all transitions

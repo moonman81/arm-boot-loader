@@ -1,0 +1,59 @@
+@prefix : <http://example.org/arm-boot-domain-rom#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# Ontology for ROMExecution State Domain
+<http://example.org/arm-boot-domain-rom> a owl:Ontology ;
+  rdfs:label "ROM Domain Ontology" .
+
+# Classes
+:DomainElement a owl:Class ;
+  rdfs:label "Domain Element" .
+
+:ROMProperty a owl:Class ;
+  rdfs:label "ROM Property" .
+
+:OrderRelation a owl:Class ;
+  rdfs:label "Order Relation" .
+
+# Properties
+:hasProperty a owl:ObjectProperty ;
+  rdfs:domain :DomainElement ;
+  rdfs:range :ROMProperty .
+
+:orderedBy a owl:ObjectProperty ;
+  rdfs:domain :DomainElement ;
+  rdfs:range :OrderRelation .
+
+:description a owl:DatatypeProperty ;
+  rdfs:domain owl:Thing ;
+  rdfs:range xsd:string .
+
+# Instances
+:ROMInactive a :DomainElement ;
+  :description "ROM not yet active" .
+
+:ROMSearching a :DomainElement ;
+  :description "ROM searching for boot media" .
+
+:ROMFoundMedia a :DomainElement ;
+  :description "ROM found valid boot media" .
+
+:ROMReady a :DomainElement ;
+  :description "ROM ready to load bootcode" .
+
+:ROMVersion a :ROMProperty ;
+  :description "Version of ROM firmware" .
+
+:SupportedMedia a :ROMProperty ;
+  :description "Boot media supported by ROM" .
+
+:SearchOrder a :ROMProperty ;
+  :description "Order in which media is searched" .
+
+# Relations
+:ROMInactive :orderedBy :ROMSearchingOrder .
+:ROMSearching :orderedBy :ROMFoundOrder .
+:ROMFoundMedia :orderedBy :ROMReadyOrder .

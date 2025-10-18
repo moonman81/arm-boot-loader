@@ -1,0 +1,198 @@
+@prefix : <http://example.org/arm-boot-master-links#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+
+# Master Linking Ontology for ARM Boot Ontologies
+<http://example.org/arm-boot-master-links> a owl:Ontology ;
+  rdfs:label "ARM Boot Master Links Ontology" .
+
+# Classes
+:Ontology a owl:Class ;
+  rdfs:label "Ontology" ;
+  rdfs:comment "An ontology in the collection" .
+
+:Link a owl:Class ;
+  rdfs:label "Link" ;
+  rdfs:comment "Link between ontologies" .
+
+# Properties
+:relatedTo a owl:ObjectProperty ;
+  rdfs:domain :Ontology ;
+  rdfs:range :Ontology ;
+  rdfs:label "related To" .
+
+:linkType a owl:DatatypeProperty ;
+  rdfs:domain :Link ;
+  rdfs:range xsd:string ;
+  rdfs:label "link Type" .
+
+:ontologyURI a owl:DatatypeProperty ;
+  rdfs:domain :Ontology ;
+  rdfs:range xsd:string ;
+  rdfs:label "ontology URI" .
+
+:description a owl:DatatypeProperty ;
+  rdfs:domain owl:Thing ;
+  rdfs:range xsd:string ;
+  rdfs:label "description" .
+
+# PROV-O Instances
+:MasterLinksOntology a prov:Entity ;
+  prov:wasGeneratedBy :CreationActivity ;
+  prov:wasAttributedTo :OpenCodeAgent ;
+  rdfs:label "Master Links Ontology" .
+
+:CreationActivity a prov:Activity ;
+  prov:startedAtTime "2025-01-01T00:00:00Z"^^xsd:dateTime ;
+  prov:endedAtTime "2025-01-01T01:00:00Z"^^xsd:dateTime ;
+  rdfs:label "Ontology Creation" .
+
+:OpenCodeAgent a prov:Agent ;
+  rdfs:label "OpenCode AI Assistant" .
+
+# Ontology Instances
+:BootloadingOntology a :Ontology ;
+  :ontologyURI "http://example.org/arm-bootloading" ;
+  :description "Basic ARM bootloading concepts" .
+
+:BootProcessOntology a :Ontology ;
+  :ontologyURI "http://example.org/arm-boot-process" ;
+  :description "Boot process stages" .
+
+:RequirementsOntology a :Ontology ;
+  :ontologyURI "http://example.org/arm-boot-requirements" ;
+  :description "General requirements" .
+
+:FuncRequirementsOntology a :Ontology ;
+  :ontologyURI "http://example.org/arm-func-requirements" ;
+  :description "Functional requirements" .
+
+:NonFuncRequirementsOntology a :Ontology ;
+  :ontologyURI "http://example.org/arm-nonfunc-requirements" ;
+  :description "Non-functional requirements" .
+
+:SecurityRequirementsOntology a :Ontology ;
+  :ontologyURI "http://example.org/arm-security-requirements" ;
+  :description "Security requirements" .
+
+:GapsOpportunitiesOntology a :Ontology ;
+  :ontologyURI "http://example.org/arm-gaps-opportunities" ;
+  :description "Gaps and opportunities" .
+
+:DocsOntology a :Ontology ;
+  :ontologyURI "http://example.org/arm-boot-docs" ;
+  :description "Documentation content" .
+
+:SpecOntology a :Ontology ;
+  :ontologyURI "http://example.org/arm-boot-spec" ;
+  :description "Specification content" .
+
+:TutorialOntology a :Ontology ;
+  :ontologyURI "http://example.org/arm-boot-tutorial" ;
+  :description "Tutorial content" .
+
+:DomainsMasterOntology a :Ontology ;
+  :ontologyURI "http://example.org/arm-boot-domains-master" ;
+  :description "Master domains" .
+
+:DomainPowerOnOntology a :Ontology ;
+  :ontologyURI "http://example.org/arm-boot-domain-poweron" ;
+  :description "PowerOn state domain" .
+
+:DomainROMOntology a :Ontology ;
+  :ontologyURI "http://example.org/arm-boot-domain-rom" ;
+  :description "ROM state domain" .
+
+:DomainBootcodeLoadOntology a :Ontology ;
+  :ontologyURI "http://example.org/arm-boot-domain-bootcode-load" ;
+  :description "Bootcode loading domain" .
+
+:DomainBootcodeExecOntology a :Ontology ;
+  :ontologyURI "http://example.org/arm-boot-domain-bootcode-exec" ;
+  :description "Bootcode execution domain" .
+
+:DomainStartElfLoadOntology a :Ontology ;
+  :ontologyURI "http://example.org/arm-boot-domain-startelf-load" ;
+  :description "Start.elf loading domain" .
+
+:DomainStartElfExecOntology a :Ontology ;
+  :ontologyURI "http://example.org/arm-boot-domain-startelf-exec" ;
+  :description "Start.elf execution domain" .
+
+:DomainKernelLoadOntology a :Ontology ;
+  :ontologyURI "http://example.org/arm-boot-domain-kernel-load" ;
+  :description "Kernel loading domain" .
+
+:DomainKernelExecOntology a :Ontology ;
+  :ontologyURI "http://example.org/arm-boot-domain-kernel-exec" ;
+  :description "Kernel execution domain" .
+
+:DomainSuccessOntology a :Ontology ;
+  :ontologyURI "http://example.org/arm-boot-domain-success" ;
+  :description "Boot success domain" .
+
+:DomainFailuresOntology a :Ontology ;
+  :ontologyURI "http://example.org/arm-boot-domain-failures" ;
+  :description "Failure states domains" .
+
+:FSAOntology a :Ontology ;
+  :ontologyURI "http://example.org/arm-boot-fsa" ;
+  :description "Finite state automata" .
+
+:MathOntology a :Ontology ;
+  :ontologyURI "http://example.org/arm-boot-math" ;
+  :description "Mathematical explorations" .
+
+:ConfigCategoryOntology a :Ontology ;
+  :ontologyURI "http://example.org/arm-boot-config-category" ;
+  :description "Configuration category" .
+
+:SetsConfigOntology a :Ontology ;
+  :ontologyURI "http://example.org/arm-boot-sets-config" ;
+  :description "Set theory configurations" .
+
+# Links
+:BootProcessOntology :relatedTo :BootloadingOntology ;
+  :linkType "extends" .
+
+:BootProcessOntology :relatedTo :SetsConfigOntology ;
+  :linkType "uses configurations" .
+
+:RequirementsOntology :relatedTo :BootProcessOntology ;
+  :linkType "applies to" .
+
+:FuncRequirementsOntology :relatedTo :RequirementsOntology ;
+  :linkType "specializes" .
+
+:NonFuncRequirementsOntology :relatedTo :RequirementsOntology ;
+  :linkType "specializes" .
+
+:SecurityRequirementsOntology :relatedTo :NonFuncRequirementsOntology ;
+  :linkType "specializes" .
+
+:GapsOpportunitiesOntology :relatedTo :DocsOntology, :SpecOntology ;
+  :linkType "addresses" .
+
+:DocsOntology :relatedTo :BootProcessOntology ;
+  :linkType "documents" .
+
+:SpecOntology :relatedTo :BootProcessOntology ;
+  :linkType "specifies" .
+
+:TutorialOntology :relatedTo :BootProcessOntology ;
+  :linkType "tutorials" .
+
+:DomainsMasterOntology :relatedTo :FSAOntology ;
+  :linkType "domains for states" .
+
+:FSAOntology :relatedTo :BootProcessOntology ;
+  :linkType "models process" .
+
+:MathOntology :relatedTo :SetsConfigOntology, :ConfigCategoryOntology ;
+  :linkType "explores mathematically" .
+
+:ConfigCategoryOntology :relatedTo :SetsConfigOntology ;
+  :linkType "categorical view" .

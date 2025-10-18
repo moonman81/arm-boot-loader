@@ -1,0 +1,243 @@
+@prefix : <http://example.org/arm-boot-math#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# Ontology for Mathematical Explorations of ARM Boot Process
+<http://example.org/arm-boot-math> a owl:Ontology ;
+  rdfs:label "ARM Boot Mathematical Ontology" .
+
+# Classes
+:Set a owl:Class ;
+  rdfs:label "Set" ;
+  rdfs:comment "Mathematical sets" .
+
+:Configuration a owl:Class ;
+  rdfs:label "Configuration" ;
+  rdfs:comment "Boot configurations" .
+
+:World a owl:Class ;
+  rdfs:label "World" ;
+  rdfs:comment "Kripke worlds (configurations)" .
+
+:AccessibilityRelation a owl:Class ;
+  rdfs:label "Accessibility Relation" ;
+  rdfs:comment "Relations between worlds" .
+
+:ModalFormula a owl:Class ;
+  rdfs:label "Modal Formula" ;
+  rdfs:comment "Modal logic formulas" .
+
+:Model a owl:Class ;
+  rdfs:label "Model" ;
+  rdfs:comment "Tarski models" .
+
+:Predicate a owl:Class ;
+  rdfs:label "Predicate" ;
+  rdfs:comment "Predicates in models" .
+
+:Category a owl:Class ;
+  rdfs:label "Category" ;
+  rdfs:comment "Category theory categories" .
+
+:Object a owl:Class ;
+  rdfs:label "Object" ;
+  rdfs:comment "Objects in categories" .
+
+:Morphism a owl:Class ;
+  rdfs:label "Morphism" ;
+  rdfs:comment "Morphisms in categories" .
+
+:Domain a owl:Class ;
+  rdfs:label "Domain" ;
+  rdfs:comment "Scott domains" .
+
+:Element a owl:Class ;
+  rdfs:label "Element" ;
+  rdfs:comment "Elements in domains" .
+
+:OrderRelation a owl:Class ;
+  rdfs:label "Order Relation" ;
+  rdfs:comment "Ordering in domains" .
+
+# Properties
+:elementOf a owl:ObjectProperty ;
+  rdfs:domain :Element ;
+  rdfs:range :Set ;
+  rdfs:label "element Of" .
+
+:hasConfiguration a owl:ObjectProperty ;
+  rdfs:domain :Configuration ;
+  rdfs:range :Set ;
+  rdfs:label "has Configuration" .
+
+:accessibleFrom a owl:ObjectProperty ;
+  rdfs:domain :World ;
+  rdfs:range :World ;
+  rdfs:label "accessible From" .
+
+:satisfies a owl:ObjectProperty ;
+  rdfs:domain :World ;
+  rdfs:range :ModalFormula ;
+  rdfs:label "satisfies" .
+
+:interprets a owl:ObjectProperty ;
+  rdfs:domain :Model ;
+  rdfs:range :Predicate ;
+  rdfs:label "interprets" .
+
+:hasObject a owl:ObjectProperty ;
+  rdfs:domain :Category ;
+  rdfs:range :Object ;
+  rdfs:label "has Object" .
+
+:hasMorphism a owl:ObjectProperty ;
+  rdfs:domain :Category ;
+  rdfs:range :Morphism ;
+  rdfs:label "has Morphism" .
+
+:domainOf a owl:ObjectProperty ;
+  rdfs:domain :Morphism ;
+  rdfs:range :Object ;
+  rdfs:label "domain Of" .
+
+:codomainOf a owl:ObjectProperty ;
+  rdfs:domain :Morphism ;
+  rdfs:range :Object ;
+  rdfs:label "codomain Of" .
+
+:orderedBy a owl:ObjectProperty ;
+  rdfs:domain :Domain ;
+  rdfs:range :OrderRelation ;
+  rdfs:label "ordered By" .
+
+:description a owl:DatatypeProperty ;
+  rdfs:domain owl:Thing ;
+  rdfs:range xsd:string ;
+  rdfs:label "description" .
+
+# Set Theory - Configurations
+:BootMediaSet a :Set ;
+  :description "Set of boot media options: {SD, USB, NVMe, Network}" .
+
+:SecureBootSet a :Set ;
+  :description "Set of secure boot options: {Enabled, Disabled}" .
+
+:ArchitectureSet a :Set ;
+  :description "Set of architectures: {ARM32, ARM64}" .
+
+:ModelSet a :Set ;
+  :description "Set of Raspberry Pi models: {Pi3, Pi4, Pi5}" .
+
+:SD a :Element ;
+  :elementOf :BootMediaSet .
+
+:USB a :Element ;
+  :elementOf :BootMediaSet .
+
+:NVMe a :Element ;
+  :elementOf :BootMediaSet .
+
+:Network a :Element ;
+  :elementOf :BootMediaSet .
+
+:SecureEnabled a :Element ;
+  :elementOf :SecureBootSet .
+
+:SecureDisabled a :Element ;
+  :elementOf :SecureBootSet .
+
+:ARM32 a :Element ;
+  :elementOf :ArchitectureSet .
+
+:ARM64 a :Element ;
+  :elementOf :ArchitectureSet .
+
+:Pi3 a :Element ;
+  :elementOf :ModelSet .
+
+:Pi4 a :Element ;
+  :elementOf :ModelSet .
+
+:Pi5 a :Element ;
+  :elementOf :ModelSet .
+
+:Config1 a :Configuration ;
+  :hasConfiguration :SD, :SecureDisabled, :ARM32, :Pi3 ;
+  :description "Configuration: SD boot, no secure, ARM32, Pi3" .
+
+:Config2 a :Configuration ;
+  :hasConfiguration :USB, :SecureEnabled, :ARM64, :Pi4 ;
+  :description "Configuration: USB boot, secure enabled, ARM64, Pi4" .
+
+# Kripke Semantics - Modalities
+:KripkeModel a :Model ;
+  :description "Kripke model for boot modalities" .
+
+:World1 a :World ;
+  :description "World representing Config1" .
+
+:World2 a :World ;
+  :description "World representing Config2" .
+
+:Accessibility1 a :AccessibilityRelation ;
+  :description "Accessibility from World1 to World2 (possible transition)" .
+
+:World1 :accessibleFrom :World2 .
+
+:DiamondBoots a :ModalFormula ;
+  :description "◇ Boots (possibly boots)" .
+
+:SquareSecure a :ModalFormula ;
+  :description "□ Secure (necessarily secure in secure-enabled worlds)" .
+
+:World2 :satisfies :SquareSecure .
+
+# Tarski Model Theory - Truth
+:TarskiModel a :Model ;
+  :description "Tarski model for boot configurations" .
+
+:BootsPredicate a :Predicate ;
+  :description "Predicate: configuration boots successfully" .
+
+:FailsPredicate a :Predicate ;
+  :description "Predicate: configuration fails to boot" .
+
+:TarskiModel :interprets :BootsPredicate, :FailsPredicate .
+
+# Grothendieck Category Theory
+:BootCategory a :Category ;
+  :description "Category of boot configurations" .
+
+:ConfigObj1 a :Object ;
+  :description "Object representing Config1" .
+
+:ConfigObj2 a :Object ;
+  :description "Object representing Config2" .
+
+:EnableSecureMorphism a :Morphism ;
+  :domainOf :ConfigObj1 ;
+  :codomainOf :ConfigObj2 ;
+  :description "Morphism: enable secure boot" .
+
+:BootCategory :hasObject :ConfigObj1, :ConfigObj2 ;
+  :hasMorphism :EnableSecureMorphism .
+
+# Scott Domain Theory
+:BootDomain a :Domain ;
+  :description "Scott domain for boot states" .
+
+:FailureElement a :Element ;
+  :description "Least element: boot failure" .
+
+:SuccessElement a :Element ;
+  :description "Greatest element: boot success" .
+
+:PartialBootElement a :Element ;
+  :description "Partial boot state" .
+
+:BootOrder a :OrderRelation ;
+  :description "Ordering: Failure < Partial < Success" .
+
+:BootDomain :orderedBy :BootOrder .

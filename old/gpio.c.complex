@@ -1,0 +1,163 @@
+/* GPIO Implementation for Raspberry Pi */
+
+#include "gpio.h"
+
+// Helper functions
+static void mmio_write(uint32_t reg, uint32_t data) {
+    *(volatile uint32_t*)reg = data;
+}
+
+static uint32_t mmio_read(uint32_t reg) {
+    return *(volatile uint32_t*)reg;
+}
+
+static void delay(uint32_t count) {
+    while (count--) {
+        asm volatile("nop");
+    }
+}
+
+void gpio_init(void) {
+    // GPIO is always available, no initialization needed
+}
+
+void gpio_set_function(uint8_t pin, uint8_t function) {
+    if (pin > 53) return;  // Invalid pin
+
+    uint8_t reg_index = pin / 10;
+    uint8_t bit_index = (pin % 10) * 3;
+
+    uint32_t gpio_base = get_gpio_base();
+    uint32_t reg_addr = gpio_base + GPIO_GPFSEL0_OFFSET + reg_index * 4;
+    uint32_t reg_value = mmio_read(reg_addr);
+
+    // Clear the 3 bits for this pin
+    reg_value &= ~(7 << bit_index);
+    // Set the function
+    reg_value |= (function << bit_index);
+
+    mmio_write(reg_addr, reg_value);
+}
+
+void gpio_set_pull(uint8_t pin, uint8_t pud) {
+    if (pin > 53) return;
+
+    uint32_t gpio_base = get_gpio_base();
+
+    // Set pull-up/down
+    mmio_write(gpio_base + GPIO_GPPUD_OFFSET, pud);
+    delay(150);  // Wait 150 cycles
+
+    // Clock the control signal
+    uint32_t reg_index = pin / 32;
+    uint32_t bit_index = pin % 32;
+    uint32_t reg_addr = gpio_base + GPIO_GPPUDCLK0_OFFSET + reg_index * 4;
+
+    mmio_write(reg_addr, 1 << bit_index);
+    delay(150);  // Wait 150 cycles
+
+    // Remove the control signal
+    mmio_write(gpio_base + GPIO_GPPUD_OFFSET, 0);
+    mmio_write(reg_addr, 0);
+}
+
+void gpio_set(uint8_t pin) {
+    if (pin > 53) return;
+
+    uint32_t gpio_base = get_gpio_base();
+    uint32_t reg_index = pin / 32;
+    uint32_t bit_index = pin % 32;
+    uint32_t reg_addr = gpio_base + GPIO_GPSET0_OFFSET + reg_index * 4;
+
+    mmio_write(reg_addr, 1 << bit_index);
+}
+
+void gpio_clear(uint8_t pin) {
+    if (pin > 53) return;
+
+    uint32_t gpio_base = get_gpio_base();
+    uint32_t reg_index = pin / 32;
+    uint32_t bit_index = pin % 32;
+    uint32_t reg_addr = gpio_base + GPIO_GPCLR0_OFFSET + reg_index * 4;
+
+    mmio_write(reg_addr, 1 << bit_index);
+}
+
+uint8_t gpio_read(uint8_t pin) {
+    if (pin > 53) return 0;
+
+    uint32_t gpio_base = get_gpio_base();
+    uint32_t reg_index = pin / 32;
+    uint32_t bit_index = pin % 32;
+    uint32_t reg_addr = gpio_base + GPIO_GPLEV0_OFFSET + reg_index * 4;
+
+    return (mmio_read(reg_addr) >> bit_index) & 1;
+}
+
+void gpio_toggle(uint8_t pin) {
+    if (gpio_read(pin)) {
+        gpio_clear(pin);
+    } else {
+        gpio_set(pin);
+    }
+}
+
+void gpio_enable_interrupt(uint8_t pin, uint8_t type) {
+    if (pin > 53) return;
+
+    uint32_t gpio_base = get_gpio_base();
+    uint32_t reg_index = pin / 32;
+    uint32_t bit_index = pin % 32;
+
+    if (type & GPIO_INT_RISING) {
+        uint32_t reg_addr = gpio_base + GPIO_GPREN0_OFFSET + reg_index * 4;
+        mmio_write(reg_addr, mmio_read(reg_addr) | (1 << bit_index));
+    }
+
+    if (type & GPIO_INT_FALLING) {
+        uint32_t reg_addr = gpio_base + GPIO_GPFEN0_OFFSET + reg_index * 4;
+        mmio_write(reg_addr, mmio_read(reg_addr) | (1 << bit_index));
+    }
+
+    if (type & GPIO_INT_HIGH) {
+        uint32_t reg_addr = gpio_base + GPIO_GPHEN0_OFFSET + reg_index * 4;
+        mmio_write(reg_addr, mmio_read(reg_addr) | (1 << bit_index));
+    }
+
+    if (type & GPIO_INT_LOW) {
+        uint32_t reg_addr = gpio_base + GPIO_GPLEN0_OFFSET + reg_index * 4;
+        mmio_write(reg_addr, mmio_read(reg_addr) | (1 << bit_index));
+    }
+
+    if (type & GPIO_INT_ASYNC) {
+        uint32_t reg_addr = gpio_base + GPIO_GPAREN0_OFFSET + reg_index * 4;
+        mmio_write(reg_addr, mmio_read(reg_addr) | (1 << bit_index));
+        reg_addr = gpio_base + GPIO_GPAFEN0_OFFSET + reg_index * 4;
+        mmio_write(reg_addr, mmio_read(reg_addr) | (1 << bit_index));
+    }
+}
+
+void gpio_disable_interrupt(uint8_t pin) {
+    if (pin > 53) return;
+
+    uint32_t gpio_base = get_gpio_base();
+    uint32_t reg_index = pin / 32;
+    uint32_t bit_index = pin % 32;
+
+    mmio_write(gpio_base + GPIO_GPREN0_OFFSET + reg_index * 4, mmio_read(gpio_base + GPIO_GPREN0_OFFSET + reg_index * 4) & ~(1 << bit_index));
+    mmio_write(gpio_base + GPIO_GPFEN0_OFFSET + reg_index * 4, mmio_read(gpio_base + GPIO_GPFEN0_OFFSET + reg_index * 4) & ~(1 << bit_index));
+    mmio_write(gpio_base + GPIO_GPHEN0_OFFSET + reg_index * 4, mmio_read(gpio_base + GPIO_GPHEN0_OFFSET + reg_index * 4) & ~(1 << bit_index));
+    mmio_write(gpio_base + GPIO_GPLEN0_OFFSET + reg_index * 4, mmio_read(gpio_base + GPIO_GPLEN0_OFFSET + reg_index * 4) & ~(1 << bit_index));
+    mmio_write(gpio_base + GPIO_GPAREN0_OFFSET + reg_index * 4, mmio_read(gpio_base + GPIO_GPAREN0_OFFSET + reg_index * 4) & ~(1 << bit_index));
+    mmio_write(gpio_base + GPIO_GPAFEN0_OFFSET + reg_index * 4, mmio_read(gpio_base + GPIO_GPAFEN0_OFFSET + reg_index * 4) & ~(1 << bit_index));
+}
+
+void gpio_clear_interrupt(uint8_t pin) {
+    if (pin > 53) return;
+
+    uint32_t gpio_base = get_gpio_base();
+    uint32_t reg_index = pin / 32;
+    uint32_t bit_index = pin % 32;
+
+    mmio_write(gpio_base + GPIO_GPEDS0_OFFSET + reg_index * 4, 1 << bit_index);
+}

@@ -1,0 +1,78 @@
+@prefix : <http://example.org/arm-boot-homotopy#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# Ontology for Homotopy Theory in Boot Processes
+<http://example.org/arm-boot-homotopy> a owl:Ontology ;
+  rdfs:label "Boot Homotopy Ontology" .
+
+# Classes
+:Path a owl:Class ;
+  rdfs:label "Path" ;
+  rdfs:comment "Paths in the boot space" .
+
+:Homotopy a owl:Class ;
+  rdfs:label "Homotopy" ;
+  rdfs:comment "Equivalence of paths" .
+
+:Space a owl:Class ;
+  rdfs:label "Space" ;
+  rdfs:comment "Topological space of boot states" .
+
+# Properties
+:startPoint a owl:ObjectProperty ;
+  rdfs:domain :Path ;
+  rdfs:range :Space ;
+  rdfs:label "start Point" .
+
+:endPoint a owl:ObjectProperty ;
+  rdfs:domain :Path ;
+  rdfs:range :Space ;
+  rdfs:label "end Point" .
+
+:connects a owl:ObjectProperty ;
+  rdfs:domain :Homotopy ;
+  rdfs:range :Path ;
+  rdfs:label "connects" .
+
+:description a owl:DatatypeProperty ;
+  rdfs:domain owl:Thing ;
+  rdfs:range xsd:string ;
+  rdfs:label "description" .
+
+# Instances - Space
+:BootSpace a :Space ;
+  :description "Topological space of boot states" .
+
+:ROMPoint a :Space ;
+  :description "Point for ROM state" .
+
+:BootcodePoint a :Space ;
+  :description "Point for bootcode state" .
+
+:StartElfPoint a :Space ;
+  :description "Point for start.elf state" .
+
+:KernelPoint a :Space ;
+  :description "Point for kernel state" .
+
+:SuccessPoint a :Space ;
+  :description "Point for success state" .
+
+# Instances - Paths
+:StandardPath a :Path ;
+  :startPoint :ROMPoint ;
+  :endPoint :SuccessPoint ;
+  :description "Standard boot path: ROM -> Bootcode -> StartElf -> Kernel -> Success" .
+
+:AlternativePath a :Path ;
+  :startPoint :ROMPoint ;
+  :endPoint :SuccessPoint ;
+  :description "Alternative path with different order" .
+
+# Instances - Homotopies
+:BootHomotopy a :Homotopy ;
+  :connects :StandardPath, :AlternativePath ;
+  :description "Homotopy between standard and alternative boot paths" .

@@ -1,0 +1,101 @@
+@prefix : <http://example.org/arm-bootloader-gaps#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# Ontology for Bootloader Implementation Gaps
+<http://example.org/arm-bootloader-gaps> a owl:Ontology ;
+  rdfs:label "Bootloader Gaps Ontology" .
+
+# Classes
+:Gap a owl:Class ;
+  rdfs:label "Gap" ;
+  rdfs:comment "Deficiencies in bootloader plan" .
+
+:Area a owl:Class ;
+  rdfs:label "Area" ;
+  rdfs:comment "Areas affected by gaps" .
+
+# Properties
+:affectsArea a owl:ObjectProperty ;
+  rdfs:domain :Gap ;
+  rdfs:range :Area ;
+  rdfs:label "affects Area" .
+
+:hasImpact a owl:DatatypeProperty ;
+  rdfs:domain :Gap ;
+  rdfs:range xsd:string ;
+  rdfs:label "has Impact" .
+
+:description a owl:DatatypeProperty ;
+  rdfs:domain :Gap ;
+  rdfs:range xsd:string ;
+  rdfs:label "description" .
+
+# Instances - Areas
+:Implementation a :Area ;
+  rdfs:label "Implementation" .
+
+:Documentation a :Area ;
+  rdfs:label "Documentation" .
+
+:Testing a :Area ;
+  rdfs:label "Testing" .
+
+:Security a :Area ;
+  rdfs:label "Security" .
+
+:Performance a :Area ;
+  rdfs:label "Performance" .
+
+# Instances - Gaps
+:RegisterMappingsGap a :Gap ;
+  :affectsArea :Implementation ;
+  :hasImpact "High" ;
+  :description "Lack of implementation-specific details like register mappings or memory layouts" .
+
+:ARMAssemblyGap a :Gap ;
+  :affectsArea :Implementation ;
+  :hasImpact "High" ;
+  :description "No coverage of low-level ARM assembly or hardware-specific initialization sequences" .
+
+:KernelHandoverGap a :Gap ;
+  :affectsArea :Implementation ;
+  :hasImpact "Critical" ;
+  :description "Missing details on kernel handover protocol (ATAGS or device tree)" .
+
+:FormalVerificationGap a :Gap ;
+  :affectsArea :Testing ;
+  :hasImpact "Medium" ;
+  :description "No formal verification methods against FSA model" .
+
+:MultiCoreGap a :Gap ;
+  :affectsArea :Implementation ;
+  :hasImpact "Medium" ;
+  :description "Limited multi-core support for Pi models" .
+
+:PowerManagementGap a :Gap ;
+  :affectsArea :Performance ;
+  :hasImpact "Low" ;
+  :description "No power management integration" .
+
+:NetworkBootGap a :Gap ;
+  :affectsArea :Implementation ;
+  :hasImpact "Low" ;
+  :description "No network boot support" .
+
+:USB3Gap a :Gap ;
+  :affectsArea :Implementation ;
+  :hasImpact "Medium" ;
+  :description "Limited USB 3.0 support on Pi 4/5" .
+
+:SecureBootGap a :Gap ;
+  :affectsArea :Security ;
+  :hasImpact "High" ;
+  :description "Incomplete secure boot implementation details" .
+
+:ErrorRecoveryGap a :Gap ;
+  :affectsArea :Implementation ;
+  :hasImpact "High" ;
+  :description "Insufficient error recovery mechanisms" .

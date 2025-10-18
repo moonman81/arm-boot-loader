@@ -1,0 +1,204 @@
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix : <http://example.org/rpi-bsp#> .
+
+# Raspberry Pi BSP Requirements Ontology
+
+# Core BSP Concepts
+:BSP a owl:Class ;
+    rdfs:label "Board Support Package" ;
+    rdfs:comment "Complete set of drivers and services for Raspberry Pi hardware" .
+
+:Driver a owl:Class ;
+    rdfs:label "Hardware Driver" ;
+    rdfs:comment "Software component that interfaces with specific hardware" .
+
+:Service a owl:Class ;
+    rdfs:label "System Service" ;
+    rdfs:comment "Software component providing system-level functionality" .
+
+# Hardware Components
+:GPIO a :Driver ;
+    rdfs:label "GPIO Controller" ;
+    :requiredFor :PinControl, :LEDControl, :ButtonInput ;
+    :registers "0xFE200000" ;
+    :interruptLine 113 ;
+    :description "General Purpose Input/Output pins control" .
+
+:Timer a :Driver ;
+    rdfs:label "System Timer" ;
+    :requiredFor :Timekeeping, :Delays, :Scheduling ;
+    :registers "0xFE003000" ;
+    :interruptLine 64 ;
+    :description "High-precision system timer for timekeeping and delays" .
+
+:InterruptController a :Driver ;
+    rdfs:label "Interrupt Controller" ;
+    :requiredFor :IRQHandling, :EventProcessing ;
+    :registers "0xFF841000" ;
+    :description "GIC-400 interrupt controller for ARM systems" .
+
+:Mailbox a :Driver ;
+    rdfs:label "Mailbox Interface" ;
+    :requiredFor :FirmwareCommunication, :PropertyInterface ;
+    :registers "0xFE00B880" ;
+    :description "Communication channel with VideoCore firmware" .
+
+:ClockManager a :Driver ;
+    rdfs:label "Clock Manager" ;
+    :requiredFor :ClockConfiguration, :PLLControl ;
+    :registers "0xFE101000" ;
+    :description "Clock generation and management for peripherals" .
+
+:PowerManager a :Driver ;
+    rdfs:label "Power Manager" ;
+    :requiredFor :PowerControl, :ResetControl ;
+    :registers "0xFE100000" ;
+    :description "Power domain and reset control" .
+
+:Watchdog a :Driver ;
+    rdfs:label "Watchdog Timer" ;
+    :requiredFor :SystemRecovery, :TimeoutProtection ;
+    :registers "0xFE100000" ;
+    :description "Hardware watchdog for system reliability" .
+
+:DMA a :Driver ;
+    rdfs:label "DMA Controller" ;
+    :requiredFor :DataTransfer, :PerformanceOptimization ;
+    :registers "0xFE007000" ;
+    :interruptLines 80, 81, 82, 83, 84, 85, 86, 87 ;
+    :description "Direct Memory Access for efficient data movement" .
+
+:I2C a :Driver ;
+    rdfs:label "I2C Controller" ;
+    :requiredFor :SensorCommunication, :EEPROM, :RTC ;
+    :registers "0xFE804000", "0xFE805000", "0xFE806000" ;
+    :interruptLines 53, 53, 53 ;
+    :description "Inter-Integrated Circuit bus for peripheral communication" .
+
+:SPI a :Driver ;
+    rdfs:label "SPI Controller" ;
+    :requiredFor :HighSpeedCommunication, :ADC, :Display ;
+    :registers "0xFE204000", "0xFE204800", "0xFE205000" ;
+    :interruptLines 54, 55, 56 ;
+    :description "Serial Peripheral Interface for high-speed data transfer" .
+
+:PWM a :Driver ;
+    rdfs:label "PWM Controller" ;
+    :requiredFor :AudioOutput, :MotorControl, :LED ;
+    :registers "0xFE20C000" ;
+    :interruptLines 85, 86 ;
+    :description "Pulse Width Modulation for analog signal generation" .
+
+:USB a :Driver ;
+    rdfs:label "USB Controller" ;
+    :requiredFor :PeripheralConnection, :MassStorage, :HID ;
+    :registers "0xFE980000" ;
+    :interruptLine 9 ;
+    :description "Universal Serial Bus host controller" .
+
+:Ethernet a :Driver ;
+    rdfs:label "Ethernet Controller" ;
+    :requiredFor :NetworkConnectivity, :InternetAccess ;
+    :registers "0xFE300000" ;
+    :interruptLine 58 ;
+    :description "Gigabit Ethernet network interface" .
+
+:SDHost a :Driver ;
+    rdfs:label "SD Host Controller" ;
+    :requiredFor :StorageAccess, :Filesystem ;
+    :registers "0xFE340000" ;
+    :interruptLine 62 ;
+    :description "SD/MMC card host controller" .
+
+# System Services
+:MemoryManager a :Service ;
+    rdfs:label "Memory Manager" ;
+    :requiredFor :Allocation, :Protection, :VirtualMemory ;
+    :description "Memory allocation and protection services" .
+
+:InterruptService a :Service ;
+    rdfs:label "Interrupt Service" ;
+    :requiredFor :IRQDispatch, :HandlerRegistration ;
+    :description "Interrupt handling and dispatching" .
+
+:TimerService a :Service ;
+    rdfs:label "Timer Service" ;
+    :requiredFor :Timeouts, :PeriodicEvents ;
+    :description "Timer-based services and scheduling" .
+
+:DeviceTreeService a :Service ;
+    rdfs:label "Device Tree Service" ;
+    :requiredFor :HardwareDiscovery, :Configuration ;
+    :description "Device tree parsing and hardware configuration" .
+
+:FirmwareInterface a :Service ;
+    rdfs:label "Firmware Interface" ;
+    :requiredFor :HardwareControl, :PropertyAccess ;
+    :description "Interface to VideoCore firmware services" .
+
+# BSP Requirements
+:BSP :requires :GPIO, :Timer, :InterruptController, :Mailbox, :ClockManager, :PowerManager, :Watchdog, :SDHost ;
+    :optionallyRequires :DMA, :I2C, :SPI, :PWM, :USB, :Ethernet ;
+    :provides :MemoryManager, :InterruptService, :TimerService, :DeviceTreeService, :FirmwareInterface .
+
+# Bootloader-specific requirements
+:BootloaderBSP a :BSP ;
+    :requires :UART, :SDHost, :Timer, :Watchdog, :GPIO, :Mailbox ;
+    :provides :FilesystemAccess, :ConfigurationParsing, :KernelLoading .
+
+# Implementation status
+:GPIO :implementationStatus "Implemented" .
+:Timer :implementationStatus "Implemented" .
+:InterruptController :implementationStatus "Implemented" .
+:Mailbox :implementationStatus "Implemented" .
+:ClockManager :implementationStatus "Implemented" .
+:PowerManager :implementationStatus "Implemented" .  # Watchdog is part of power management
+:Watchdog :implementationStatus "Implemented" .
+:DMA :implementationStatus "Implemented" .
+:I2C :implementationStatus "Implemented" .
+:SPI :implementationStatus "Implemented" .
+:PWM :implementationStatus "Implemented" .
+:USB :implementationStatus "Implemented" .
+:Ethernet :implementationStatus "Implemented" .
+:SDHost :implementationStatus "Implemented" .
+:UART :implementationStatus "Implemented" .
+
+# System Services implementation
+:MemoryManager :implementationStatus "Implemented" .
+:InterruptService :implementationStatus "Implemented" .
+:TimerService :implementationStatus "Implemented" .
+:DeviceTreeService :implementationStatus "Implemented" .
+:FirmwareInterface :implementationStatus "Implemented" .
+
+# Dependencies
+:FilesystemAccess :dependsOn :SDHost .
+:KernelLoading :dependsOn :FilesystemAccess, :MemoryManager .
+:ConfigurationParsing :dependsOn :FilesystemAccess .
+
+# Priority levels
+:Critical a owl:Class ;
+    rdfs:label "Critical Priority" ;
+    rdfs:comment "Must be implemented for basic functionality" .
+
+:Important a owl:Class ;
+    rdfs:label "Important Priority" ;
+    rdfs:comment "Should be implemented for full functionality" .
+
+:Optional a owl:Class ;
+    rdfs:label "Optional Priority" ;
+    rdfs:comment "Nice to have for advanced features" .
+
+:GPIO :priority :Critical .
+:Timer :priority :Critical .
+:InterruptController :priority :Critical .
+:Mailbox :priority :Important .
+:ClockManager :priority :Important .
+:PowerManager :priority :Important .
+:DMA :priority :Optional .
+:I2C :priority :Optional .
+:SPI :priority :Optional .
+:PWM :priority :Optional .
+:USB :priority :Optional .
+:Ethernet :priority :Optional .

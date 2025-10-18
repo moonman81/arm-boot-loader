@@ -1,0 +1,135 @@
+@prefix : <http://example.org/rpi-boot-constraints#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# Ontology for Raspberry Pi Boot Constraints and Requirements
+
+:Constraint rdf:type owl:Class ;
+    rdfs:label "Boot Constraint" ;
+    rdfs:comment "A constraint on the boot process" .
+
+:Requirement rdf:type owl:Class ;
+    rdfs:label "Boot Requirement" ;
+    rdfs:comment "A requirement for successful boot" .
+
+:hasConstraint rdf:type owl:ObjectProperty ;
+    rdfs:domain :BootProcess ;
+    rdfs:range :Constraint .
+
+:hasRequirement rdf:type owl:ObjectProperty ;
+    rdfs:domain :BootProcess ;
+    rdfs:range :Requirement .
+
+:BootProcess rdf:type owl:Class ;
+    rdfs:label "Boot Process" .
+
+:RaspberryPiBoot rdf:type :BootProcess ;
+    rdfs:label "Raspberry Pi Boot Process" .
+
+# Constraints
+
+:GPU_Priority_Constraint rdf:type :Constraint ;
+    rdfs:label "GPU Priority Constraint" ;
+    rdfs:comment "VideoCore GPU must boot before ARM CPU" .
+
+:Memory_Layout_Constraint rdf:type :Constraint ;
+    rdfs:label "Memory Layout Constraint" ;
+    rdfs:comment "Lower RAM addresses reserved for GPU firmware and communication" .
+
+:ARM_Reset_Vector_Constraint rdf:type :Constraint ;
+    rdfs:label "ARM Reset Vector Constraint" ;
+    rdfs:comment "ARM reset vector at 0x0 cannot be used directly for boot" .
+
+:Hardware_Init_Order_Constraint rdf:type :Constraint ;
+    rdfs:label "Hardware Initialization Order Constraint" ;
+    rdfs:comment "GPU must initialize hardware before ARM activation" .
+
+:Bootloader_Address_Constraint rdf:type :Constraint ;
+    rdfs:label "Bootloader Address Constraint" ;
+    rdfs:comment "Bootloader must be loaded at 0x80000 to avoid GPU memory conflicts" .
+
+:Address_Translation_Constraint rdf:type :Constraint ;
+    rdfs:label "Address Translation Constraint" ;
+    rdfs:comment "0x80000 provides 524KB offset for GPU operations" .
+
+# Requirements
+
+:GPU_Firmware_Requirement rdf:type :Requirement ;
+    rdfs:label "GPU Firmware Requirement" ;
+    rdfs:comment "Valid bootcode.bin and start.elf must be present on SD card" .
+
+:SD_Card_Format_Requirement rdf:type :Requirement ;
+    rdfs:label "SD Card Format Requirement" ;
+    rdfs:comment "SD card must be formatted with FAT32 and contain boot files" .
+
+:Bootloader_Placement_Requirement rdf:type :Requirement ;
+    rdfs:label "Bootloader Placement Requirement" ;
+    rdfs:comment "Bootloader must be named kernel8.img and placed in boot partition root" .
+
+:Config_File_Requirement rdf:type :Requirement ;
+    rdfs:label "Config File Requirement" ;
+    rdfs:comment "config.txt must specify kernel filename and boot parameters" .
+
+:Hardware_Compatibility_Requirement rdf:type :Requirement ;
+    rdfs:label "Hardware Compatibility Requirement" ;
+    rdfs:comment "Bootloader must be compiled for correct BCM2711/BCM2712 SoC" .
+
+:UART_Debug_Requirement rdf:type :Requirement ;
+    rdfs:label "UART Debug Requirement" ;
+    rdfs:comment "UART must be configured for serial debugging output" .
+
+:Kernel_Image_Requirement rdf:type :Requirement ;
+    rdfs:label "Kernel Image Requirement" ;
+    rdfs:comment "Valid ARM64 Linux kernel image must be available for handover" .
+
+:DTB_Requirement rdf:type :Requirement ;
+    rdfs:label "Device Tree Blob Requirement" ;
+    rdfs:comment "Appropriate DTB file must be loaded for hardware description" .
+
+# Relations
+
+:RaspberryPiBoot :hasConstraint :GPU_Priority_Constraint .
+:RaspberryPiBoot :hasConstraint :Memory_Layout_Constraint .
+:RaspberryPiBoot :hasConstraint :ARM_Reset_Vector_Constraint .
+:RaspberryPiBoot :hasConstraint :Hardware_Init_Order_Constraint .
+:RaspberryPiBoot :hasConstraint :Bootloader_Address_Constraint .
+:RaspberryPiBoot :hasConstraint :Address_Translation_Constraint .
+
+:RaspberryPiBoot :hasRequirement :GPU_Firmware_Requirement .
+:RaspberryPiBoot :hasRequirement :SD_Card_Format_Requirement .
+:RaspberryPiBoot :hasRequirement :Bootloader_Placement_Requirement .
+:RaspberryPiBoot :hasRequirement :Config_File_Requirement .
+:RaspberryPiBoot :hasRequirement :Hardware_Compatibility_Requirement .
+:RaspberryPiBoot :hasRequirement :UART_Debug_Requirement .
+:RaspberryPiBoot :hasRequirement :Kernel_Image_Requirement .
+:RaspberryPiBoot :hasRequirement :DTB_Requirement .
+
+# Constraint properties
+
+:constraintAddress rdf:type owl:DatatypeProperty ;
+    rdfs:domain :Bootloader_Address_Constraint ;
+    rdfs:range xsd:hexBinary .
+
+:Bootloader_Address_Constraint :constraintAddress "80000"^^xsd:hexBinary .
+
+:constraintOffset rdf:type owl:DatatypeProperty ;
+    rdfs:domain :Address_Translation_Constraint ;
+    rdfs:range xsd:integer .
+
+:Address_Translation_Constraint :constraintOffset 524288 .
+
+# Requirement properties
+
+:requirementFile rdf:type owl:DatatypeProperty ;
+    rdfs:domain :Bootloader_Placement_Requirement ;
+    rdfs:range xsd:string .
+
+:Bootloader_Placement_Requirement :requirementFile "kernel8.img" .
+
+:requirementArchitecture rdf:type owl:DatatypeProperty ;
+    rdfs:domain :Hardware_Compatibility_Requirement ;
+    rdfs:range xsd:string .
+
+:Hardware_Compatibility_Requirement :requirementArchitecture "ARM64" .

@@ -1,0 +1,29 @@
+/* Memory Manager Header for Bootloader */
+
+#ifndef MEMORY_H
+#define MEMORY_H
+
+#include <stdint.h>
+#include <stddef.h>
+
+// Memory regions (simplified for bootloader)
+#define BOOTLOADER_HEAP_START  0x200000   // 2MB
+#define BOOTLOADER_HEAP_SIZE   0x100000   // 1MB heap
+#define KERNEL_LOAD_ADDR       0x80000    // 512KB
+#define INITRD_LOAD_ADDR       0x1000000  // 16MB
+#define DTB_ADDR               0x1000     // 4KB
+
+// Memory block header
+typedef struct mem_block {
+    size_t size;
+    uint8_t free;
+    struct mem_block *next;
+} mem_block_t;
+
+void memory_init(void);
+void *memory_alloc(size_t size);
+void memory_free(void *ptr);
+size_t memory_get_free(void);
+size_t memory_get_used(void);
+
+#endif

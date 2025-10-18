@@ -1,0 +1,129 @@
+@prefix : <http://example.org/arm-func-requirements#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# Ontology for Functional Requirements of ARM Boot Process
+<http://example.org/arm-func-requirements> a owl:Ontology ;
+  rdfs:label "ARM Functional Requirements Ontology" .
+
+# Classes
+:FunctionalRequirement a owl:Class ;
+  rdfs:label "Functional Requirement" ;
+  rdfs:comment "Requirements specifying what the boot process must do" .
+
+:BootAction a owl:Class ;
+  rdfs:label "Boot Action" ;
+  rdfs:comment "Specific actions performed during boot" .
+
+# Properties
+:hasDependency a owl:ObjectProperty ;
+  rdfs:domain :FunctionalRequirement ;
+  rdfs:range :FunctionalRequirement ;
+  rdfs:label "has Dependency" .
+
+:performs a owl:ObjectProperty ;
+  rdfs:domain :FunctionalRequirement ;
+  rdfs:range :BootAction ;
+  rdfs:label "performs" .
+
+:description a owl:DatatypeProperty ;
+  rdfs:domain :FunctionalRequirement ;
+  rdfs:range xsd:string ;
+  rdfs:label "description" .
+
+# Instances - Functional Requirements
+:FR1 a :FunctionalRequirement ;
+  :description "The system shall initialize the ARM processor via built-in ROM code" ;
+  :performs :InitializeProcessor .
+
+:FR2 a :FunctionalRequirement ;
+  :description "The system shall load bootcode.bin from the primary boot media" ;
+  :hasDependency :FR1 ;
+  :performs :LoadBootcode .
+
+:FR3 a :FunctionalRequirement ;
+  :description "The system shall execute bootcode.bin to initialize the SDRAM" ;
+  :hasDependency :FR2 ;
+  :performs :ExecuteBootcode .
+
+:FR4 a :FunctionalRequirement ;
+  :description "The system shall load start.elf from the boot media" ;
+  :hasDependency :FR3 ;
+  :performs :LoadStartElf .
+
+:FR5 a :FunctionalRequirement ;
+  :description "The system shall execute start.elf to perform hardware initialization" ;
+  :hasDependency :FR4 ;
+  :performs :ExecuteStartElf .
+
+:FR6 a :FunctionalRequirement ;
+  :description "The system shall parse config.txt for boot configuration" ;
+  :hasDependency :FR5 ;
+  :performs :ParseConfig .
+
+:FR7 a :FunctionalRequirement ;
+  :description "The system shall load the appropriate kernel image (kernel.img or kernel8.img)" ;
+  :hasDependency :FR5 ;
+  :performs :LoadKernel .
+
+:FR8 a :FunctionalRequirement ;
+  :description "The system shall pass control to the kernel" ;
+  :hasDependency :FR6, :FR7 ;
+  :performs :PassControlToKernel .
+
+:FR9 a :FunctionalRequirement ;
+  :description "The system shall support booting from SD card, USB, and NVMe" ;
+  :performs :SupportBootMedia .
+
+:FR10 a :FunctionalRequirement ;
+  :description "The system shall handle ARM32 and ARM64 architectures" ;
+  :performs :HandleArchitectures .
+
+:FR11 a :FunctionalRequirement ;
+  :description "The system shall load and apply device tree overlays" ;
+  :hasDependency :FR5 ;
+  :performs :LoadDeviceTree .
+
+:FR12 a :FunctionalRequirement ;
+  :description "The system shall initialize essential peripherals during boot" ;
+  :hasDependency :FR5 ;
+  :performs :InitializePeripherals .
+
+# Instances - Boot Actions
+:InitializeProcessor a :BootAction ;
+  rdfs:label "Initialize ARM Processor" .
+
+:LoadBootcode a :BootAction ;
+  rdfs:label "Load bootcode.bin" .
+
+:ExecuteBootcode a :BootAction ;
+  rdfs:label "Execute bootcode.bin" .
+
+:LoadStartElf a :BootAction ;
+  rdfs:label "Load start.elf" .
+
+:ExecuteStartElf a :BootAction ;
+  rdfs:label "Execute start.elf" .
+
+:ParseConfig a :BootAction ;
+  rdfs:label "Parse config.txt" .
+
+:LoadKernel a :BootAction ;
+  rdfs:label "Load Kernel Image" .
+
+:PassControlToKernel a :BootAction ;
+  rdfs:label "Pass Control to Kernel" .
+
+:SupportBootMedia a :BootAction ;
+  rdfs:label "Support Multiple Boot Media" .
+
+:HandleArchitectures a :BootAction ;
+  rdfs:label "Handle ARM Architectures" .
+
+:LoadDeviceTree a :BootAction ;
+  rdfs:label "Load Device Tree" .
+
+:InitializePeripherals a :BootAction ;
+  rdfs:label "Initialize Peripherals" .

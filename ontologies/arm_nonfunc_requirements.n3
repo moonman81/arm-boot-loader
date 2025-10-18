@@ -1,0 +1,109 @@
+@prefix : <http://example.org/arm-nonfunc-requirements#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# Ontology for Non-Functional Requirements of ARM Boot Process
+<http://example.org/arm-nonfunc-requirements> a owl:Ontology ;
+  rdfs:label "ARM Non-Functional Requirements Ontology" .
+
+# Classes
+:NonFunctionalRequirement a owl:Class ;
+  rdfs:label "Non-Functional Requirement" ;
+  rdfs:comment "Requirements specifying quality attributes" .
+
+:QualityAttribute a owl:Class ;
+  rdfs:label "Quality Attribute" ;
+  rdfs:comment "Categories like Performance, Security" .
+
+# Properties
+:hasAttribute a owl:ObjectProperty ;
+  rdfs:domain :NonFunctionalRequirement ;
+  rdfs:range :QualityAttribute ;
+  rdfs:label "has Attribute" .
+
+:hasPriority a owl:DatatypeProperty ;
+  rdfs:domain :NonFunctionalRequirement ;
+  rdfs:range xsd:string ;
+  rdfs:label "has Priority" .
+
+:hasTradeOff a owl:ObjectProperty ;
+  rdfs:domain :NonFunctionalRequirement ;
+  rdfs:range :NonFunctionalRequirement ;
+  rdfs:label "has Trade Off" .
+
+:description a owl:DatatypeProperty ;
+  rdfs:domain :NonFunctionalRequirement ;
+  rdfs:range xsd:string ;
+  rdfs:label "description" .
+
+# Instances - Quality Attributes
+:Performance a :QualityAttribute ;
+  rdfs:label "Performance" .
+
+:Security a :QualityAttribute ;
+  rdfs:label "Security" .
+
+:Reliability a :QualityAttribute ;
+  rdfs:label "Reliability" .
+
+:Usability a :QualityAttribute ;
+  rdfs:label "Usability" .
+
+:Compatibility a :QualityAttribute ;
+  rdfs:label "Compatibility" .
+
+:Maintainability a :QualityAttribute ;
+  rdfs:label "Maintainability" .
+
+:Portability a :QualityAttribute ;
+  rdfs:label "Portability" .
+
+:Efficiency a :QualityAttribute ;
+  rdfs:label "Efficiency" .
+
+# Instances - Non-Functional Requirements
+:NFR1 a :NonFunctionalRequirement ;
+  :hasAttribute :Performance ;
+  :hasPriority "Medium" ;
+  :description "Boot time shall be less than 10 seconds for standard configurations" .
+
+:NFR2 a :NonFunctionalRequirement ;
+  :hasAttribute :Security ;
+  :hasPriority "High" ;
+  :description "The boot process shall support secure boot to verify firmware integrity" .
+
+:NFR3 a :NonFunctionalRequirement ;
+  :hasAttribute :Reliability ;
+  :hasPriority "High" ;
+  :description "The system shall boot successfully in 99% of cases under normal conditions" .
+
+:NFR4 a :NonFunctionalRequirement ;
+  :hasAttribute :Usability ;
+  :hasPriority "Low" ;
+  :description "Configuration files shall be human-readable and editable" .
+
+:NFR5 a :NonFunctionalRequirement ;
+  :hasAttribute :Compatibility ;
+  :hasPriority "Medium" ;
+  :description "Shall support booting multiple operating systems" .
+
+:NFR6 a :NonFunctionalRequirement ;
+  :hasAttribute :Maintainability ;
+  :hasPriority "Low" ;
+  :description "Firmware shall be updatable without hardware changes" .
+
+:NFR7 a :NonFunctionalRequirement ;
+  :hasAttribute :Portability ;
+  :hasPriority "Medium" ;
+  :description "Boot process shall work across all Raspberry Pi models" .
+
+:NFR8 a :NonFunctionalRequirement ;
+  :hasAttribute :Efficiency ;
+  :hasPriority "Low" ;
+  :description "Power consumption during boot shall be minimized" .
+
+# Trade-offs
+:NFR1 :hasTradeOff :NFR2 .  # Performance vs Security
+:NFR2 :hasTradeOff :NFR1 .

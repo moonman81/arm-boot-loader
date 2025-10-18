@@ -1,0 +1,48 @@
+/* Timer Header for Raspberry Pi */
+
+#ifndef TIMER_H
+#define TIMER_H
+
+#include <stdint.h>
+#include "hardware.h"
+
+// System Timer register offsets
+#define TIMER_CS_OFFSET  0x00  // Control/Status
+#define TIMER_CLO_OFFSET 0x04  // Counter Lower 32 bits
+#define TIMER_CHI_OFFSET 0x08  // Counter Higher 32 bits
+#define TIMER_C0_OFFSET  0x0C  // Compare 0
+#define TIMER_C1_OFFSET  0x10  // Compare 1
+#define TIMER_C2_OFFSET  0x14  // Compare 2
+#define TIMER_C3_OFFSET  0x18  // Compare 3
+
+// ARM Timer register offsets (relative to ARM timer base)
+#define ARM_TIMER_LOAD_OFFSET    0x400  // Load
+#define ARM_TIMER_VALUE_OFFSET   0x404  // Value
+#define ARM_TIMER_CONTROL_OFFSET 0x408  // Control
+#define ARM_TIMER_IRQCLR_OFFSET  0x40C  // IRQ Clear
+#define ARM_TIMER_RAWIRQ_OFFSET  0x410  // Raw IRQ
+#define ARM_TIMER_MASKIRQ_OFFSET 0x414  // Masked IRQ
+#define ARM_TIMER_RELOAD_OFFSET  0x418  // Reload
+#define ARM_TIMER_PREDIV_OFFSET  0x41C  // Pre-divider
+#define ARM_TIMER_COUNT_OFFSET   0x420  // Free running counter
+
+// Timer control bits
+#define ARM_TIMER_CONTROL_32BIT    (1 << 1)
+#define ARM_TIMER_CONTROL_PRESCALE_1 (0 << 2)
+#define ARM_TIMER_CONTROL_PRESCALE_16 (1 << 2)
+#define ARM_TIMER_CONTROL_PRESCALE_256 (2 << 2)
+#define ARM_TIMER_CONTROL_INT_EN   (1 << 5)
+#define ARM_TIMER_CONTROL_EN       (1 << 7)
+
+void timer_init(void);
+uint64_t timer_get_counter(void);
+void timer_delay_us(uint32_t us);
+void timer_delay_ms(uint32_t ms);
+uint32_t timer_get_ticks(void);
+void timer_arm_init(void);
+void timer_arm_set_load(uint32_t load);
+void timer_arm_enable_interrupt(void);
+void timer_arm_disable_interrupt(void);
+void timer_arm_clear_interrupt(void);
+
+#endif

@@ -1,0 +1,83 @@
+/* Timer Implementation for Raspberry Pi */
+
+#include "timer.h"
+
+// Helper functions
+static void mmio_write(uint32_t reg, uint32_t data) {
+    *(volatile uint32_t*)reg = data;
+}
+
+static uint32_t mmio_read(uint32_t reg) {
+    return *(volatile uint32_t*)reg;
+}
+
+void timer_init(void) {
+    // System timer is always running, no initialization needed
+    // ARM timer needs to be configured for interrupts if used
+}
+
+uint64_t timer_get_counter(void) {
+    // Read the 64-bit system timer counter
+    uint32_t timer_base = get_timer_base();
+    uint32_t hi = mmio_read(timer_base + TIMER_CHI_OFFSET);
+    uint32_t lo = mmio_read(timer_base + TIMER_CLO_OFFSET);
+    // Check if high word changed during read
+    if (hi != mmio_read(timer_base + TIMER_CHI_OFFSET)) {
+        hi = mmio_read(timer_base + TIMER_CHI_OFFSET);
+        lo = mmio_read(timer_base + TIMER_CLO_OFFSET);
+    }
+    return ((uint64_t)hi << 32) | lo;
+}
+
+void timer_delay_us(uint32_t us) {
+    uint64_t start = timer_get_counter();
+    uint64_t target = start + us;  // System timer runs at 1MHz
+
+    while (timer_get_counter() < target) {
+        // Busy wait
+    }
+}
+
+void timer_delay_ms(uint32_t ms) {
+    timer_delay_us(ms * 1000);
+}
+
+uint32_t timer_get_ticks(void) {
+    uint32_t timer_base = get_timer_base();
+    return mmio_read(timer_base + TIMER_CLO_OFFSET);
+}
+
+void timer_arm_init(void) {
+    uint32_t arm_timer_base = get_arm_timer_base();
+    // Disable timer and interrupts
+    mmio_write(arm_timer_base + ARM_TIMER_CONTROL_OFFSET, 0);
+
+    // Clear any pending interrupts
+    mmio_write(arm_timer_base + ARM_TIMER_IRQCLR_OFFSET, 0);
+}
+
+void timer_arm_set_load(uint32_t load) {
+    uint32_t arm_timer_base = get_arm_timer_base();
+    mmio_write(arm_timer_base + ARM_TIMER_LOAD_OFFSET, load);
+}
+
+void timer_arm_enable_interrupt(void) {
+    uint32_t arm_timer_base = get_arm_timer_base();
+    uint32_t control = mmio_read(arm_timer_base + ARM_TIMER_CONTROL_OFFSET);
+    control |= ARM_TIMER_CONTROL_INT_EN;
+    control |= ARM_TIMER_CONTROL_EN;
+    control |= ARM_TIMER_CONTROL_32BIT;
+    mmio_write(arm_timer_base + ARM_TIMER_CONTROL_OFFSET, control);
+}
+
+void timer_arm_disable_interrupt(void) {
+    uint32_t arm_timer_base = get_arm_timer_base();
+    uint32_t control = mmio_read(arm_timer_base + ARM_TIMER_CONTROL_OFFSET);
+    control &= ~ARM_TIMER_CONTROL_INT_EN;
+    mmio_write(arm_timer_base + ARM_TIMER_CONTROL_OFFSET, control);
+}
+
+void timer_arm_clear_interrupt(void) {
+    uint32_t arm_timer_base = get_arm_timer_base();
+    mmio_write(arm_timer_base + ARM_TIMER_IRQCLR_OFFSET, 0);
+}

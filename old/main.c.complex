@@ -1,0 +1,610 @@
+/* Custom Raspberry Pi Bootloader Main */
+
+#include "uart.h"
+#include "sd.h"
+#include "config.h"
+#include "dtb.h"
+#include "gpio.h"
+#include "config.h"
+#include "timer.h"
+#include "interrupt.h"
+#include "mailbox.h"
+#include "clock.h"
+#include "memory.h"
+#include "dma.h"
+#include "i2c.h"
+#include "spi.h"
+#include "pwm.h"
+#include "usb.h"
+#include "fsa_monitor.h"
+#include "ethernet.h"
+#include "security.h"
+#include "verification.h"
+#include "hardware.h"
+
+// External config variables for hyper-configurable bootloader
+extern char bootcode_source[32];
+extern char startelf_source[32];
+extern char kernel_source[32];
+extern int enable_alternative_boot;
+extern int enable_modular_boot;
+extern int enable_network_boot;
+extern int enable_usb_boot;
+
+// Driver test declarations
+void run_driver_tests(void);
+
+// FSA state is now managed by fsa_monitor
+
+// Error recovery
+#define MAX_RETRIES 3
+
+// Filename validation
+static int validate_filename(const char *filename) {
+    if (!filename) return 0;
+    int len = 0;
+    while (*filename) {
+        if (*filename == '/' || *filename == '\\' || *filename == ':' || *filename == '*' || *filename == '?' || *filename == '"' || *filename == '<' || *filename == '>' || *filename == '|') {
+            return 0; // Invalid characters
+        }
+        if (++len > 255) return 0; // Too long
+        filename++;
+    }
+    return len > 0; // Must not be empty
+}
+
+// Simple string comparison for freestanding environment
+static int strcmp(const char *s1, const char *s2) {
+    while (*s1 && *s2) {
+        if (*s1 != *s2) return *s1 - *s2;
+        s1++; s2++;
+    }
+    return *s1 - *s2;
+}
+
+// Watchdog
+#define WATCHDOG_BASE 0xFE100000
+#define WATCHDOG_RSTC 0x1C
+#define WATCHDOG_WDOG 0x14
+#define WATCHDOG_PASSWORD 0x5A000000
+#define WATCHDOG_RSTC_WRCFG_MASK 0x00000030
+#define WATCHDOG_RSTC_WRCFG_FULL_RESET 0x00000020
+
+// Performance measurement
+static uint64_t boot_start_time;
+static uint64_t state_start_time;
+
+static void mmio_write(uint32_t reg, uint32_t data) {
+    *(volatile uint32_t*)reg = data;
+}
+
+static void watchdog_init(void) {
+    // Set watchdog timeout to 10 seconds
+    mmio_write(WATCHDOG_BASE + WATCHDOG_WDOG, WATCHDOG_PASSWORD | 100000);
+}
+
+static void watchdog_reset(void) {
+    // Reset watchdog timer
+    mmio_write(WATCHDOG_BASE + WATCHDOG_RSTC, WATCHDOG_PASSWORD | WATCHDOG_RSTC_WRCFG_FULL_RESET);
+}
+
+/* Kernel handover */
+typedef struct {
+    unsigned long x0;  /* Physical address of device tree */
+    unsigned long x1;  /* 0 */
+    unsigned long x2;  /* 0 */
+    unsigned long x3;  /* 0 */
+    unsigned long x4;  /* 0 */
+} handover_regs_t;
+
+void kernel_handover(unsigned long kernel_addr, unsigned long dtb_addr) {
+    handover_regs_t regs = {
+        .x0 = dtb_addr,
+        .x1 = 0,
+        .x2 = 0,
+        .x3 = 0,
+        .x4 = 0
+    };
+
+    uart_puts("Handing over to kernel...\n");
+
+    /* Set registers and jump to kernel */
+    __asm__ volatile (
+        "mov x0, %0\n"
+        "mov x1, %1\n"
+        "mov x2, %2\n"
+        "mov x3, %3\n"
+        "mov x4, %4\n"
+        "br %5\n"
+        :
+        : "r"(regs.x0), "r"(regs.x1), "r"(regs.x2), "r"(regs.x3), "r"(regs.x4), "r"(kernel_addr)
+        : "x0", "x1", "x2", "x3", "x4"
+    );
+}
+
+void main(void) {
+    // Initialize core BSP components
+    uart_init();
+    memory_init();
+    gpio_init();
+    timer_init();
+    interrupt_init();
+    mailbox_init();
+    hardware_detect_model();
+    config_apply_model_settings();
+    clock_init();
+
+    // Register interrupt handlers
+    interrupt_register_handler(INTERRUPT_TIMER, timer_interrupt_handler);
+    interrupt_register_handler(INTERRUPT_GPIO, gpio_interrupt_handler);
+
+    // Enable interrupts
+    interrupt_enable(INTERRUPT_TIMER);
+    interrupt_enable(INTERRUPT_GPIO);
+
+    // Initialize ARM timer for interrupts
+    timer_arm_init();
+    timer_arm_set_load(1000000);  // 1 second at 1MHz
+    timer_arm_enable_interrupt();
+
+    boot_start_time = timer_get_counter();
+    uart_puts("Custom Raspberry Pi Bootloader v1.0\n");
+    uart_puts("Complete BSP Initialized\n");
+
+    // Configure GPIO LED
+    gpio_set_function(GPIO_LED_PIN, GPIO_FUNC_OUTPUT);
+    gpio_set(GPIO_LED_PIN);  // Turn on LED
+
+    // Test mailbox communication
+    uint32_t firmware_rev = mailbox_get_firmware_revision();
+    if (firmware_rev) {
+        uart_puts("Firmware communication active\n");
+    }
+
+    // Display comprehensive model information
+    const pi_model_info_t *model_info = hardware_get_model_info();
+    uart_puts("Detected Raspberry Pi: ");
+    uart_puts(model_info->name);
+    uart_puts("\n");
+
+    // Display model specifications
+    uart_puts("SoC: BCM");
+    // Simple number to string conversion
+    uint32_t soc = model_info->soc_type;
+    if (soc >= 1000) uart_putc('0' + (soc / 1000));
+    if (soc >= 100) uart_putc('0' + ((soc / 100) % 10));
+    if (soc >= 10) uart_putc('0' + ((soc / 10) % 10));
+    uart_putc('0' + (soc % 10));
+    uart_puts(", ");
+
+    uart_putc('0' + model_info->cpu_cores);
+    uart_puts(" cores, ");
+    uint32_t mem = model_info->default_memory_mb;
+    if (mem >= 1000) {
+        uart_putc('0' + (mem / 1000));
+        uart_putc('0' + ((mem / 100) % 10));
+        uart_putc('0' + ((mem / 10) % 10));
+    } else if (mem >= 100) {
+        uart_putc('0' + (mem / 100));
+        uart_putc('0' + ((mem / 10) % 10));
+    } else {
+        uart_putc('0' + (mem / 10));
+    }
+    uart_putc('0' + (mem % 10));
+    uart_puts("MB RAM\n");
+
+    // Display capabilities
+    uart_puts("Capabilities: ");
+    if (model_info->has_ethernet) uart_puts("ETH ");
+    if (model_info->has_wifi) uart_puts("WiFi ");
+    if (model_info->has_bluetooth) uart_puts("BT ");
+    if (model_info->has_usb3) uart_puts("USB3 ");
+    if (model_info->has_pcie) uart_puts("PCIe ");
+    uart_puts("\n");
+
+    // Apply model-specific tuning
+    hardware_apply_model_tuning();
+    hardware_apply_model_quirks();
+
+    // Test memory allocation
+    void *test_alloc = memory_alloc(1024);
+    if (test_alloc) {
+        uart_puts("Memory allocation working\n");
+        memory_free(test_alloc);
+    }
+
+    // Initialize additional drivers
+    dma_init();
+    i2c_init(I2C_BUS_0);
+    spi_init(SPI_BUS_0);
+    pwm_init();
+
+    // Initialize security subsystem
+    // security_init();  // Commented out due to missing crypto implementation
+
+    // Initialize formal verification system
+    verification_init();
+
+    // Initialize FSA monitoring
+    fsa_monitor_init();
+
+    // Run driver tests
+    run_driver_tests();
+
+    watchdog_init();
+
+    /* Hyper-Flexible FSA Implementation with Intermediate States */
+    unsigned long dtb_addr = 0; // Device tree blob address
+
+    while (1) {
+        watchdog_reset(); // Reset watchdog on each state
+
+        // Record state start time
+        state_start_time = timer_get_counter();
+
+        // Perform FSA monitoring tick
+        fsa_monitor_tick();
+
+        switch (fsa_monitor.current_state) {
+            case STATE_POWER_ON:
+                uart_puts("Power-on detected\n");
+                fsa_update_state(STATE_EARLY_HW_INIT);
+                break;
+
+            case STATE_EARLY_HW_INIT:
+                uart_puts("Early hardware initialization...\n");
+                // Basic hardware already initialized above
+                fsa_update_state(STATE_BOOTCODE_SOURCE_SELECT);
+                break;
+
+            case STATE_BOOTCODE_SOURCE_SELECT:
+                uart_puts("Selecting bootcode source...\n");
+                if (strcmp(bootcode_source, "usb") == 0 && enable_usb_boot) {
+                    fsa_update_state(STATE_USB_BOOT_INIT);
+                } else if ((strcmp(bootcode_source, "network") == 0 || strcmp(bootcode_source, "pxe") == 0) && enable_network_boot) {
+                    fsa_update_state(STATE_NETWORK_BOOT_INIT);
+                } else {
+                    // Default to SD card
+                    fsa_update_state(STATE_BOOTCODE_LOADING);
+                }
+                break;
+
+            case STATE_BOOTCODE_LOADING:
+                uart_puts("Loading bootcode...\n");
+                if (sd_init() == 0) {
+                    fsa_update_state(STATE_BOOTCODE_VALIDATION);
+                } else {
+                    if (++fsa_monitor.retry_count < MAX_RETRIES) {
+                        uart_puts("SD init failed, retrying...\n");
+                    } else {
+                        fsa_update_state(STATE_FAILURE);
+                    }
+                }
+                break;
+
+            case STATE_BOOTCODE_VALIDATION:
+                uart_puts("Validating bootcode...\n");
+                // Basic validation - SD is accessible
+                fsa_update_state(STATE_BOOTCODE_EXEC);
+                break;
+
+            case STATE_BOOTCODE_EXEC:
+                uart_puts("Executing bootcode...\n");
+                // SDRAM init would go here
+                fsa_update_state(STATE_BOOTCODE_CONFIG_PARSE);
+                break;
+
+            case STATE_BOOTCODE_CONFIG_PARSE:
+                uart_puts("Parsing bootcode configuration...\n");
+                // Could parse bootcode-specific config here
+                fsa_update_state(STATE_CORE_DRIVER_INIT);
+                break;
+
+            case STATE_CORE_DRIVER_INIT:
+                uart_puts("Initializing core drivers...\n");
+                // Core drivers already initialized
+                fsa_update_state(STATE_BSP_DRIVER_INIT);
+                break;
+
+            case STATE_BSP_DRIVER_INIT:
+                uart_puts("Initializing BSP drivers...\n");
+                // BSP drivers already initialized
+                fsa_update_state(STATE_HW_VALIDATION);
+                break;
+
+            case STATE_HW_VALIDATION:
+                uart_puts("Validating hardware...\n");
+                // Basic hardware validation
+                fsa_update_state(STATE_SECURITY_ATTESTATION);
+                break;
+
+            case STATE_SECURITY_ATTESTATION:
+                uart_puts("Performing security attestation...\n");
+                if (security_attest() == 0) {
+                    fsa_update_state(STATE_FIRMWARE_MEASUREMENT);
+                } else {
+                    uart_puts("Security attestation failed\n");
+                    fsa_update_state(STATE_FAILURE);
+                }
+                break;
+
+            case STATE_FIRMWARE_MEASUREMENT:
+                uart_puts("Measuring firmware integrity...\n");
+                if (security_measure_firmware() == 0) {
+                    fsa_update_state(STATE_BOOT_POLICY_VALIDATION);
+                } else {
+                    uart_puts("Firmware measurement failed\n");
+                    fsa_update_state(STATE_FAILURE);
+                }
+                break;
+
+            case STATE_BOOT_POLICY_VALIDATION:
+                uart_puts("Validating boot policy...\n");
+                if (security_validate_boot_policy() == 0) {
+                    fsa_update_state(STATE_TRUSTED_EXECUTION_INIT);
+                } else {
+                    uart_puts("Boot policy validation failed\n");
+                    fsa_update_state(STATE_FAILURE);
+                }
+                break;
+
+            case STATE_TRUSTED_EXECUTION_INIT:
+                uart_puts("Initializing trusted execution...\n");
+                if (security_init_trusted_execution() == 0) {
+                    fsa_update_state(STATE_CONFIG_LOADING);
+                } else {
+                    uart_puts("Trusted execution initialization failed\n");
+                    fsa_update_state(STATE_FAILURE);
+                }
+                break;
+
+            case STATE_CONFIG_LOADING:
+                uart_puts("Loading configuration...\n");
+                fsa_update_state(STATE_CONFIG_PARSING);
+                break;
+
+            case STATE_CONFIG_PARSING:
+                uart_puts("Parsing configuration...\n");
+                config_parse();
+                fsa_update_state(STATE_CONFIGURATION_COHERENCE_CHECK);
+                break;
+
+            case STATE_CONFIGURATION_COHERENCE_CHECK:
+                uart_puts("Checking configuration coherence...\n");
+                // Verify configuration consistency across components (Grothendieck topology)
+                // In a real implementation, would check sheaf conditions
+                fsa_update_state(STATE_DEPENDENCY_GRAPH_ANALYSIS);
+                break;
+
+            case STATE_DEPENDENCY_GRAPH_ANALYSIS:
+                uart_puts("Analyzing dependency graph...\n");
+                // Analyze configuration dependencies and resolve conflicts (Scott domain theory)
+                // Would build dependency graph and check for cycles/consistency
+                fsa_update_state(STATE_CONFIG_VALIDATION);
+                break;
+
+            case STATE_CONFIG_VALIDATION:
+                uart_puts("Validating configuration...\n");
+                // Basic config validation
+                fsa_update_state(STATE_SEMANTIC_VALIDATION);
+                break;
+
+            case STATE_SEMANTIC_VALIDATION:
+                uart_puts("Performing semantic validation...\n");
+                // Semantic validation of configuration against formal model (Tarski model theory)
+                if (verification_run_comprehensive_check() == 1) {
+                    fsa_update_state(STATE_CONSISTENCY_CHECK);
+                } else {
+                    uart_puts("Semantic validation failed\n");
+                    fsa_update_state(STATE_FAILURE);
+                }
+                break;
+
+            case STATE_CONSISTENCY_CHECK:
+                uart_puts("Checking configuration consistency...\n");
+                // Final consistency check across all configuration domains (Godel completeness)
+                // Would verify consistency of the entire configuration space
+                fsa_update_state(STATE_CONFIG_APPLICATION);
+                break;
+
+            case STATE_CONFIG_APPLICATION:
+                uart_puts("Applying configuration...\n");
+                // Config already applied during parsing
+                fsa_update_state(STATE_STARTELF_SOURCE_SELECT);
+                break;
+
+            case STATE_STARTELF_SOURCE_SELECT:
+                uart_puts("Selecting start.elf source...\n");
+                if (strcmp(startelf_source, "usb") == 0 && enable_usb_boot) {
+                    fsa_update_state(STATE_USB_BOOT_INIT);
+                } else if ((strcmp(startelf_source, "network") == 0 || strcmp(startelf_source, "pxe") == 0) && enable_network_boot) {
+                    fsa_update_state(STATE_NETWORK_BOOT_INIT);
+                } else {
+                    fsa_update_state(STATE_STARTELF_LOADING);
+                }
+                break;
+
+            case STATE_STARTELF_LOADING:
+                uart_puts("Loading start.elf...\n");
+                // Load start.elf (placeholder)
+                fsa_update_state(STATE_STARTELF_VALIDATION);
+                break;
+
+            case STATE_STARTELF_VALIDATION:
+                uart_puts("Validating start.elf...\n");
+                fsa_update_state(STATE_STARTELF_EXEC);
+                break;
+
+            case STATE_STARTELF_EXEC:
+                uart_puts("Executing start.elf...\n");
+                // Hardware init
+                fsa_update_state(STATE_KERNEL_SOURCE_SELECT);
+                break;
+
+            case STATE_KERNEL_SOURCE_SELECT:
+                uart_puts("Selecting kernel source...\n");
+                if (strcmp(kernel_source, "usb") == 0 && enable_usb_boot) {
+                    fsa_update_state(STATE_USB_BOOT_INIT);
+                } else if ((strcmp(kernel_source, "network") == 0 || strcmp(kernel_source, "pxe") == 0) && enable_network_boot) {
+                    fsa_update_state(STATE_NETWORK_BOOT_INIT);
+                } else if (strcmp(kernel_source, "module") == 0 && enable_modular_boot) {
+                    fsa_update_state(STATE_MODULE_DEPENDENCY_RESOLVE);
+                } else {
+                    fsa_update_state(STATE_KERNEL_LOADING);
+                }
+                break;
+
+            case STATE_KERNEL_LOADING:
+                uart_puts("Loading kernel...\n");
+                if (!validate_filename(kernel_filename)) {
+                    uart_puts("Invalid kernel filename\n");
+                    fsa_update_state(STATE_FAILURE);
+                    break;
+                }
+                if (sd_load_file(kernel_filename, kernel_addr) == 0) {
+                    fsa_update_state(STATE_KERNEL_VALIDATION);
+                } else {
+                    if (++fsa_monitor.retry_count < MAX_RETRIES) {
+                        uart_puts("Kernel load failed, retrying...\n");
+                    } else {
+                        fsa_update_state(STATE_FAILURE);
+                    }
+                }
+                break;
+
+            case STATE_KERNEL_VALIDATION:
+                uart_puts("Validating kernel...\n");
+                // Basic kernel validation
+                fsa_update_state(STATE_INITRD_LOADING);
+                break;
+
+            case STATE_INITRD_LOADING:
+                uart_puts("Loading initrd...\n");
+                if (initrd_filename[0]) {
+                    sd_load_file(initrd_filename, initrd_addr);
+                }
+                fsa_update_state(STATE_DTB_LOADING);
+                break;
+
+            case STATE_DTB_LOADING:
+                uart_puts("Loading device tree...\n");
+                dtb_addr = dtb_create(0x1000);
+                fsa_update_state(STATE_KERNEL_PARAMS_SETUP);
+                break;
+
+            case STATE_KERNEL_PARAMS_SETUP:
+                uart_puts("Setting up kernel parameters...\n");
+                fsa_update_state(STATE_KERNEL_EXEC);
+                break;
+
+            case STATE_KERNEL_EXEC:
+                uart_puts("Executing kernel...\n");
+                // Handover to kernel
+                kernel_handover(kernel_addr, dtb_addr);
+                break;
+
+            // Alternative boot paths
+            case STATE_NETWORK_BOOT_INIT:
+                uart_puts("Network boot not implemented\n");
+                fsa_update_state(STATE_FAILURE);
+                break;
+
+            case STATE_PXE_BOOT_EXEC:
+                uart_puts("PXE boot not implemented\n");
+                fsa_update_state(STATE_FAILURE);
+                break;
+
+            case STATE_USB_BOOT_INIT:
+                uart_puts("Initializing USB boot...\n");
+                if (usb_boot_init() >= 0) {
+                    uart_puts("USB mass storage device found\n");
+                    fsa_update_state(STATE_KERNEL_LOADING);
+                } else {
+                    uart_puts("No USB mass storage device found\n");
+                    fsa_update_state(STATE_FAILURE);
+                }
+                break;
+
+            case STATE_FAILSAFE_BOOT_INIT:
+                uart_puts("Failsafe boot not implemented\n");
+                fsa_update_state(STATE_FAILURE);
+                break;
+
+            case STATE_RECOVERY_BOOT_INIT:
+                uart_puts("Recovery boot not implemented\n");
+                fsa_update_state(STATE_FAILURE);
+                break;
+
+            // Modular loading (placeholders)
+            case STATE_MODULE_DEPENDENCY_RESOLVE:
+                uart_puts("Resolving module dependencies...\n");
+                // For now, assume no dependencies - load kernel directly
+                fsa_update_state(STATE_MODULE_LOADING);
+                break;
+
+            case STATE_MODULE_LOADING:
+                uart_puts("Loading kernel modules...\n");
+                // Load kernel as if it were a module
+                if (!validate_filename(kernel_filename)) {
+                    uart_puts("Invalid kernel filename\n");
+                    fsa_update_state(STATE_FAILURE);
+                    break;
+                }
+                if (sd_load_file(kernel_filename, kernel_addr) == 0) {
+                    fsa_update_state(STATE_MODULE_VALIDATION);
+                } else {
+                    if (++fsa_monitor.retry_count < MAX_RETRIES) {
+                        uart_puts("Module load failed, retrying...\n");
+                    } else {
+                        fsa_update_state(STATE_FAILURE);
+                    }
+                }
+                break;
+
+            case STATE_MODULE_VALIDATION:
+                uart_puts("Validating kernel module...\n");
+                // Basic validation - kernel is loaded
+                fsa_update_state(STATE_KERNEL_EXEC);
+                break;
+
+            case STATE_SUCCESS:
+                uint64_t boot_end_time = timer_get_counter();
+                uint64_t total_boot_time = (boot_end_time - boot_start_time) / 1000000; // Convert to milliseconds
+                uart_puts("Boot successful!\n");
+                uart_puts("Total boot time: ");
+                // Simple number printing
+                char time_str[16];
+                int pos = 0;
+                uint64_t temp = total_boot_time;
+                if (temp == 0) time_str[pos++] = '0';
+                else {
+                    char buf[16];
+                    int i = 0;
+                    while (temp > 0) {
+                        buf[i++] = '0' + (temp % 10);
+                        temp /= 10;
+                    }
+                    while (i > 0) time_str[pos++] = buf[--i];
+                }
+                time_str[pos] = '\0';
+                uart_puts(time_str);
+                uart_puts(" ms\n");
+                fsa_dump_history(); // Dump final state history
+                return;
+
+            case STATE_FAILURE:
+                uart_puts("Boot failed!\n");
+                fsa_dump_history(); // Dump failure history for debugging
+                while (1) {} // Halt
+                break;
+
+            case STATE_HALT:
+                uart_puts("System halted\n");
+                while (1) {} // Halt
+                break;
+        }
+
+        // Small delay to prevent tight polling
+        timer_delay_ms(10);
+    }
+}

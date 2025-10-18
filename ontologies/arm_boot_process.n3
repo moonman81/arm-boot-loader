@@ -1,0 +1,109 @@
+@prefix : <http://example.org/arm-boot-process#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# Ontology for ARM Boot Process
+<http://example.org/arm-boot-process> a owl:Ontology ;
+  rdfs:label "ARM Boot Process Ontology" .
+
+# Classes
+:BootProcess a owl:Class ;
+  rdfs:label "Boot Process" ;
+  rdfs:comment "The overall process of booting an ARM device" .
+
+:BootStage a owl:Class ;
+  rdfs:label "Boot Stage" ;
+  rdfs:comment "Individual stages in the boot process" .
+
+:FirmwareComponent a owl:Class ;
+  rdfs:label "Firmware Component" ;
+  rdfs:comment "Components like ROM, bootcode.bin, start.elf" .
+
+:Kernel a owl:Class ;
+  rdfs:label "Kernel" ;
+  rdfs:comment "The operating system kernel" .
+
+# Properties
+:hasStage a owl:ObjectProperty ;
+  rdfs:domain :BootProcess ;
+  rdfs:range :BootStage ;
+  rdfs:label "has Stage" .
+
+:nextStage a owl:ObjectProperty ;
+  rdfs:domain :BootStage ;
+  rdfs:range :BootStage ;
+  rdfs:label "next Stage" .
+
+:loads a owl:ObjectProperty ;
+  rdfs:domain :BootStage ;
+  rdfs:range :FirmwareComponent ;
+  rdfs:label "loads" .
+
+:initializes a owl:ObjectProperty ;
+  rdfs:domain :BootStage ;
+  rdfs:range :BootStage ;
+  rdfs:label "initializes" .
+
+# Instances for Raspberry Pi 4 Boot Process
+:Pi4BootProcess a :BootProcess ;
+  :hasStage :Pi4Stage1, :Pi4Stage2, :Pi4Stage3, :Pi4Stage4 .
+
+:Pi4Stage1 a :BootStage ;
+  rdfs:label "ROM Boot" ;
+  :loads :BootcodeBin ;
+  :nextStage :Pi4Stage2 .
+
+:Pi4Stage2 a :BootStage ;
+  rdfs:label "Bootcode.bin Execution" ;
+  :loads :StartElf ;
+  :nextStage :Pi4Stage3 .
+
+:Pi4Stage3 a :BootStage ;
+  rdfs:label "Start.elf Execution" ;
+  :loads :KernelImg ;
+  :nextStage :Pi4Stage4 .
+
+:Pi4Stage4 a :BootStage ;
+  rdfs:label "Kernel Boot" .
+
+:BootcodeBin a :FirmwareComponent ;
+  rdfs:label "bootcode.bin" .
+
+:StartElf a :FirmwareComponent ;
+  rdfs:label "start.elf" .
+
+:KernelImg a :Kernel ;
+  rdfs:label "kernel.img" .
+
+# Instances for Raspberry Pi 5 Boot Process
+:Pi5BootProcess a :BootProcess ;
+  :hasStage :Pi5Stage1, :Pi5Stage2, :Pi5Stage3, :Pi5Stage4 .
+
+:Pi5Stage1 a :BootStage ;
+  rdfs:label "ROM Boot" ;
+  :loads :BootcodeBin5 ;
+  :nextStage :Pi5Stage2 .
+
+:Pi5Stage2 a :BootStage ;
+  rdfs:label "Bootcode.bin Execution" ;
+  :loads :StartElf5 ;
+  :nextStage :Pi5Stage3 .
+
+:Pi5Stage3 a :BootStage ;
+  rdfs:label "Start.elf Execution" ;
+  :loads :Kernel8Img ;
+  :nextStage :Pi5Stage4 .
+
+:Pi5Stage4 a :BootStage ;
+  rdfs:label "Kernel Boot" .
+
+:BootcodeBin5 a :FirmwareComponent ;
+  rdfs:label "bootcode.bin (Pi 5)" .
+
+:StartElf5 a :FirmwareComponent ;
+  rdfs:label "start.elf (Pi 5)" .
+
+:Kernel8Img a :Kernel ;
+  rdfs:label "kernel8.img" .

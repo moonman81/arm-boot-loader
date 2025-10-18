@@ -1,0 +1,208 @@
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix : <http://example.org/arm-boot-scott#> .
+
+# Scott Domain Theory Ontology for ARM Bootloader FSA
+# Based on Scott's domain theory: directed complete partial orders, fixed points
+
+# Domain Theory Concepts
+:Domain a owl:Class ;
+    rdfs:label "Domain" ;
+    rdfs:comment "A set with a partial order that is directed complete" .
+
+:PartialOrder a owl:Class ;
+    rdfs:label "Partial Order" ;
+    rdfs:comment "Reflexive, antisymmetric, transitive relation" .
+
+:DirectedSet a owl:Class ;
+    rdfs:label "Directed Set" ;
+    rdfs:comment "Set where every pair has an upper bound" .
+
+:LeastElement a owl:Class ;
+    rdfs:label "Least Element (Bottom)" ;
+    rdfs:comment "⊥ - the minimal element in the domain" .
+
+:FixedPoint a owl:Class ;
+    rdfs:label "Fixed Point" ;
+    rdfs:comment "Element x such that f(x) = x for some function f" .
+
+:ContinuousFunction a owl:Class ;
+    rdfs:label "Continuous Function" ;
+    rdfs:comment "Function preserving directed suprema" .
+
+# Bootloader State Domain
+:BootStateDomain a :Domain ;
+    rdfs:label "Boot State Domain" ;
+    :hasPartialOrder :BootStateOrder ;
+    :hasLeastElement :BootFailureState ;
+    :hasFixedPoint :BootSuccessState .
+
+:BootStateOrder a :PartialOrder ;
+    rdfs:label "Boot State Partial Order" ;
+    :orderingPrinciple "States ordered by progress toward completion" .
+
+# Domain Elements: Boot States
+:BootStateElement a owl:Class ;
+    rdfs:label "Boot State Domain Element" .
+
+:BootFailureState a :BootStateElement, :LeastElement ;
+    rdfs:label "Boot Failure State (⊥)" ;
+    :represents :STATE_FAILURE ;
+    :isMinimal true .
+
+:BootcodeLoadingState a :BootStateElement ;
+    rdfs:label "Bootcode Loading State" ;
+    :represents :STATE_BOOTCODE_LOADING ;
+    :greaterThan :BootFailureState .
+
+:BootcodeExecState a :BootStateElement ;
+    rdfs:label "Bootcode Execution State" ;
+    :represents :STATE_BOOTCODE_EXEC ;
+    :greaterThan :BootcodeLoadingState .
+
+:StartelfLoadingState a :BootStateElement ;
+    rdfs:label "Start.elf Loading State" ;
+    :represents :STATE_STARTELF_LOADING ;
+    :greaterThan :BootcodeExecState .
+
+:StartelfExecState a :BootStateElement ;
+    rdfs:label "Start.elf Execution State" ;
+    :represents :STATE_STARTELF_EXEC ;
+    :greaterThan :StartelfLoadingState .
+
+:KernelLoadingState a :BootStateElement ;
+    rdfs:label "Kernel Loading State" ;
+    :represents :STATE_KERNEL_LOADING ;
+    :greaterThan :StartelfExecState .
+
+:KernelExecState a :BootStateElement ;
+    rdfs:label "Kernel Execution State" ;
+    :represents :STATE_KERNEL_EXEC ;
+    :greaterThan :KernelLoadingState .
+
+:BootSuccessState a :BootStateElement, :FixedPoint ;
+    rdfs:label "Boot Success State" ;
+    :represents :STATE_SUCCESS ;
+    :greaterThan :KernelExecState ;
+    :isFixedPoint true .
+
+# Directed Suprema (Least Upper Bounds)
+:DirectedSupremum a owl:Class ;
+    rdfs:label "Directed Supremum" ;
+    rdfs:comment "Least upper bound of a directed set" .
+
+:BootProgressSupremum a :DirectedSupremum ;
+    :ofSet (:BootcodeLoadingState :BootcodeExecState :StartelfLoadingState) ;
+    :equals :StartelfExecState .
+
+:CompleteBootSupremum a :DirectedSupremum ;
+    :ofSet (:BootStateDomain) ;
+    :equals :BootSuccessState .
+
+# Continuous Functions on the Domain
+:BootTransitionFunction a :ContinuousFunction ;
+    rdfs:label "Boot State Transition Function" ;
+    :domain :BootStateDomain ;
+    :codomain :BootStateDomain ;
+    :preservesSuprema true .
+
+# Function definitions
+:BootTransitionFunction :maps :BootFailureState :BootFailureState ;
+    :maps :BootcodeLoadingState :BootcodeExecState ;
+    :maps :BootcodeExecState :StartelfLoadingState ;
+    :maps :StartelfLoadingState :StartelfExecState ;
+    :maps :StartelfExecState :KernelLoadingState ;
+    :maps :KernelLoadingState :KernelExecState ;
+    :maps :KernelExecState :BootSuccessState ;
+    :maps :BootSuccessState :BootSuccessState .
+
+# Fixed Point Induction
+:FixedPointInduction a owl:Class ;
+    rdfs:label "Fixed Point Induction Principle" .
+
+:BootFixedPoint :FixedPointInduction ;
+    :function :BootTransitionFunction ;
+    :fixedPoint :BootSuccessState ;
+    :proof "By Kleene fixed point theorem, iteration reaches success or failure" .
+
+# Domain Properties
+:DomainProperty a owl:Class ;
+    rdfs:label "Domain Property" .
+
+:BootDomainCompleteness :DomainProperty ;
+    :ensures "Every directed set has a supremum" ;
+    :implies "Boot process convergence is guaranteed" .
+
+:BootDomainContinuity :DomainProperty ;
+    :ensures "State transitions are continuous" ;
+    :implies "Small changes in input lead to small changes in output" .
+
+# Approximation Chains
+:ApproximationChain a owl:Class ;
+    rdfs:label "Approximation Chain" ;
+    rdfs:comment "Increasing sequence approaching the fixed point" .
+
+:BootApproximationChain a :ApproximationChain ;
+    :sequence (:BootFailureState :BootcodeLoadingState :BootcodeExecState
+               :StartelfLoadingState :StartelfExecState :KernelLoadingState
+               :KernelExecState :BootSuccessState) ;
+    :limit :BootSuccessState .
+
+# Denotational Semantics
+:DenotationalSemantics a owl:Class ;
+    rdfs:label "Denotational Semantics" ;
+    rdfs:comment "Meaning of programs as elements of domains" .
+
+:BootProcessSemantics :DenotationalSemantics ;
+    :program :BootloaderFSA ;
+    :meaning :BootStateDomain ;
+    :denotes "The boot process denotes a computation in the state domain" .
+
+# Recursive Domain Equations
+:RecursiveDomain a owl:Class ;
+    rdfs:label "Recursive Domain Equation" .
+
+:BootStateRecursion :RecursiveDomain ;
+    :equation "D = ⊥ + (D → D)" ;
+    :solution :BootStateDomain ;
+    :meaning "Boot states include failure and functions from states to states" .
+
+# Scott Continuity
+:ScottContinuity a owl:Class ;
+    rdfs:label "Scott Continuity" ;
+    rdfs:comment "Continuity with respect to the Scott topology" .
+
+:BootTransitionContinuity :ScottContinuity ;
+    :function :BootTransitionFunction ;
+    :property "Preserves directed suprema" ;
+    :implies "Boot process is predictable and convergent" .
+
+# Domain Theory Axioms
+:DomainAxiom a owl:Class ;
+    rdfs:label "Domain Theory Axiom" .
+
+:AxiomOfCompleteness :DomainAxiom ;
+    :statement "Every directed set has a supremum" .
+
+:AxiomOfContinuity :DomainAxiom ;
+    :statement "Functions are continuous with respect to directed suprema" .
+
+:AxiomOfFixedPoints :DomainAxiom ;
+    :statement "Every continuous function has a least fixed point" .
+
+# Boot Process Domain Properties
+:BootDomainProperties a owl:Class ;
+    rdfs:label "Boot Process Domain Properties" .
+
+:ConvergentBoot :BootDomainProperties ;
+    :property "Boot process converges to success or failure" ;
+    :justifiedBy :AxiomOfFixedPoints .
+
+:ComposableTransitions :BootDomainProperties ;
+    :property "State transitions compose continuously" ;
+    :justifiedBy :AxiomOfContinuity .
+
+:CompleteBootSpace :BootDomainProperties ;
+    :property "All possible boot paths are covered" ;
+    :justifiedBy :AxiomOfCompleteness .

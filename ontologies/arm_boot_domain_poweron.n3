@@ -1,0 +1,75 @@
+@prefix : <http://example.org/arm-boot-domain-poweron#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# Ontology for PowerOn State Domain
+<http://example.org/arm-boot-domain-poweron> a owl:Ontology ;
+  rdfs:label "PowerOn Domain Ontology" .
+
+# Classes
+:DomainElement a owl:Class ;
+  rdfs:label "Domain Element" ;
+  rdfs:comment "Elements in the PowerOn domain" .
+
+:PowerProperty a owl:Class ;
+  rdfs:label "Power Property" ;
+  rdfs:comment "Properties of power state" .
+
+:OrderRelation a owl:Class ;
+  rdfs:label "Order Relation" ;
+  rdfs:comment "Scott ordering in domain" .
+
+# Properties
+:hasProperty a owl:ObjectProperty ;
+  rdfs:domain :DomainElement ;
+  rdfs:range :PowerProperty ;
+  rdfs:label "has Property" .
+
+:orderedBy a owl:ObjectProperty ;
+  rdfs:domain :DomainElement ;
+  rdfs:range :OrderRelation ;
+  rdfs:label "ordered By" .
+
+:description a owl:DatatypeProperty ;
+  rdfs:domain owl:Thing ;
+  rdfs:range xsd:string ;
+  rdfs:label "description" .
+
+# Instances - Domain Elements
+:PowerOff a :DomainElement ;
+  :description "No power applied" .
+
+:PowerUnstable a :DomainElement ;
+  :description "Power applied but voltage fluctuating" .
+
+:PowerStable a :DomainElement ;
+  :description "Stable power supply established" .
+
+:HardwareReset a :DomainElement ;
+  :description "Hardware in reset state, ready for boot" .
+
+# Instances - Properties
+:VoltageLevel a :PowerProperty ;
+  :description "Electrical voltage level" .
+
+:PowerSource a :PowerProperty ;
+  :description "Source of power (USB, battery, etc.)" .
+
+:Stability a :PowerProperty ;
+  :description "Stability of power supply" .
+
+# Relations
+:PowerOff :orderedBy :PowerUnstableOrder .
+:PowerUnstable :orderedBy :PowerStableOrder .
+:PowerStable :orderedBy :HardwareResetOrder .
+
+:PowerUnstableOrder a :OrderRelation ;
+  :description "PowerOff ⊏ PowerUnstable" .
+
+:PowerStableOrder a :OrderRelation ;
+  :description "PowerUnstable ⊏ PowerStable" .
+
+:HardwareResetOrder a :OrderRelation ;
+  :description "PowerStable ⊏ HardwareReset" .

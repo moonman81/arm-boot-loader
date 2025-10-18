@@ -1,0 +1,129 @@
+@prefix : <http://example.org/arm-boot-config-category#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# Ontology for Boot Configuration Category
+<http://example.org/arm-boot-config-category> a owl:Ontology ;
+  rdfs:label "Boot Config Category Ontology" .
+
+# Classes
+:ConfigurationObject a owl:Class ;
+  rdfs:label "Configuration Object" ;
+  rdfs:comment "Objects in the category (boot configurations)" .
+
+:TransformationMorphism a owl:Class ;
+  rdfs:label "Transformation Morphism" ;
+  rdfs:comment "Morphisms (transformations between configurations)" .
+
+:Category a owl:Class ;
+  rdfs:label "Category" ;
+  rdfs:comment "The category structure" .
+
+# Properties
+:domainOf a owl:ObjectProperty ;
+  rdfs:domain :TransformationMorphism ;
+  rdfs:range :ConfigurationObject ;
+  rdfs:label "domain Of" .
+
+:codomainOf a owl:ObjectProperty ;
+  rdfs:domain :TransformationMorphism ;
+  rdfs:range :ConfigurationObject ;
+  rdfs:label "codomain Of" .
+
+:hasObject a owl:ObjectProperty ;
+  rdfs:domain :Category ;
+  rdfs:range :ConfigurationObject ;
+  rdfs:label "has Object" .
+
+:hasMorphism a owl:ObjectProperty ;
+  rdfs:domain :Category ;
+  rdfs:range :TransformationMorphism ;
+  rdfs:label "has Morphism" .
+
+:composedOf a owl:ObjectProperty ;
+  rdfs:domain :TransformationMorphism ;
+  rdfs:range :TransformationMorphism ;
+  rdfs:label "composed Of" .
+
+:description a owl:DatatypeProperty ;
+  rdfs:domain owl:Thing ;
+  rdfs:range xsd:string ;
+  rdfs:label "description" .
+
+# Instances - Configuration Objects
+:Config_SD_NoSecure_ARM32_Pi3 a :ConfigurationObject ;
+  :description "SD boot, no secure, ARM32, Pi3" .
+
+:Config_USB_NoSecure_ARM32_Pi3 a :ConfigurationObject ;
+  :description "USB boot, no secure, ARM32, Pi3" .
+
+:Config_SD_Secure_ARM64_Pi4 a :ConfigurationObject ;
+  :description "SD boot, secure enabled, ARM64, Pi4" .
+
+:Config_USB_Secure_ARM64_Pi4 a :ConfigurationObject ;
+  :description "USB boot, secure enabled, ARM64, Pi4" .
+
+:Config_NVMe_Secure_ARM64_Pi5 a :ConfigurationObject ;
+  :description "NVMe boot, secure enabled, ARM64, Pi5" .
+
+# Instances - Transformation Morphisms
+:ChangeMedia_SD_to_USB a :TransformationMorphism ;
+  :domainOf :Config_SD_NoSecure_ARM32_Pi3 ;
+  :codomainOf :Config_USB_NoSecure_ARM32_Pi3 ;
+  :description "Change boot media from SD to USB" .
+
+:EnableSecure a :TransformationMorphism ;
+  :domainOf :Config_SD_NoSecure_ARM32_Pi3 ;
+  :codomainOf :Config_SD_Secure_ARM64_Pi4 ;
+  :description "Enable secure boot and upgrade to Pi4 ARM64" .
+
+:UpgradeModel_Pi3_to_Pi4 a :TransformationMorphism ;
+  :domainOf :Config_USB_NoSecure_ARM32_Pi3 ;
+  :codomainOf :Config_USB_Secure_ARM64_Pi4 ;
+  :description "Upgrade model from Pi3 to Pi4 with secure and ARM64" .
+
+:ChangeMedia_USB_to_NVMe a :TransformationMorphism ;
+  :domainOf :Config_USB_Secure_ARM64_Pi4 ;
+  :codomainOf :Config_NVMe_Secure_ARM64_Pi5 ;
+  :description "Change media to NVMe and upgrade to Pi5" .
+
+# Identity Morphisms
+:Id_SD_NoSecure_ARM32_Pi3 a :TransformationMorphism ;
+  :domainOf :Config_SD_NoSecure_ARM32_Pi3 ;
+  :codomainOf :Config_SD_NoSecure_ARM32_Pi3 ;
+  :description "Identity morphism for SD no secure Pi3" .
+
+:Id_USB_NoSecure_ARM32_Pi3 a :TransformationMorphism ;
+  :domainOf :Config_USB_NoSecure_ARM32_Pi3 ;
+  :codomainOf :Config_USB_NoSecure_ARM32_Pi3 ;
+  :description "Identity morphism for USB no secure Pi3" .
+
+:Id_SD_Secure_ARM64_Pi4 a :TransformationMorphism ;
+  :domainOf :Config_SD_Secure_ARM64_Pi4 ;
+  :codomainOf :Config_SD_Secure_ARM64_Pi4 ;
+  :description "Identity morphism for SD secure Pi4" .
+
+:Id_USB_Secure_ARM64_Pi4 a :TransformationMorphism ;
+  :domainOf :Config_USB_Secure_ARM64_Pi4 ;
+  :codomainOf :Config_USB_Secure_ARM64_Pi4 ;
+  :description "Identity morphism for USB secure Pi4" .
+
+:Id_NVMe_Secure_ARM64_Pi5 a :TransformationMorphism ;
+  :domainOf :Config_NVMe_Secure_ARM64_Pi5 ;
+  :codomainOf :Config_NVMe_Secure_ARM64_Pi5 ;
+  :description "Identity morphism for NVMe secure Pi5" .
+
+# Composition Examples
+:Composite_Enable_and_Change a :TransformationMorphism ;
+  :domainOf :Config_SD_NoSecure_ARM32_Pi3 ;
+  :codomainOf :Config_USB_Secure_ARM64_Pi4 ;
+  :composedOf :ChangeMedia_SD_to_USB, :UpgradeModel_Pi3_to_Pi4 ;
+  :description "Composition: change media then upgrade model" .
+
+# The Category
+:BootConfigCategory a :Category ;
+  :hasObject :Config_SD_NoSecure_ARM32_Pi3, :Config_USB_NoSecure_ARM32_Pi3, :Config_SD_Secure_ARM64_Pi4, :Config_USB_Secure_ARM64_Pi4, :Config_NVMe_Secure_ARM64_Pi5 ;
+  :hasMorphism :ChangeMedia_SD_to_USB, :EnableSecure, :UpgradeModel_Pi3_to_Pi4, :ChangeMedia_USB_to_NVMe, :Id_SD_NoSecure_ARM32_Pi3, :Id_USB_NoSecure_ARM32_Pi3, :Id_SD_Secure_ARM64_Pi4, :Id_USB_Secure_ARM64_Pi4, :Id_NVMe_Secure_ARM64_Pi5, :Composite_Enable_and_Change ;
+  :description "Category of boot configurations with transformation morphisms" .

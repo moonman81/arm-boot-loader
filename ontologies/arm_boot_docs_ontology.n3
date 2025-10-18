@@ -1,0 +1,238 @@
+@prefix : <http://example.org/arm-boot-docs#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# Ontology for ARM Boot Documentation Content
+<http://example.org/arm-boot-docs> a owl:Ontology ;
+  rdfs:label "ARM Boot Documentation Ontology" .
+
+# Classes
+:DocumentationSection a owl:Class ;
+  rdfs:label "Documentation Section" ;
+  rdfs:comment "Sections in the boot documentation" .
+
+:BootStage a owl:Class ;
+  rdfs:label "Boot Stage" ;
+  rdfs:comment "Stages in the boot process" .
+
+:BootMedia a owl:Class ;
+  rdfs:label "Boot Media" ;
+  rdfs:comment "Supported boot media types" .
+
+:SecureBootFeature a owl:Class ;
+  rdfs:label "Secure Boot Feature" ;
+  rdfs:comment "Features of secure boot" .
+
+:FirmwareUpdateMethod a owl:Class ;
+  rdfs:label "Firmware Update Method" ;
+  rdfs:comment "Methods for updating firmware" .
+
+:TroubleshootingIssue a owl:Class ;
+  rdfs:label "Troubleshooting Issue" ;
+  rdfs:comment "Common boot issues" .
+
+:DiagnosticStep a owl:Class ;
+  rdfs:label "Diagnostic Step" ;
+  rdfs:comment "Steps for diagnosing boot issues" .
+
+:Tool a owl:Class ;
+  rdfs:label "Tool" ;
+  rdfs:comment "Tools for boot management" .
+
+:Reference a owl:Class ;
+  rdfs:label "Reference" ;
+  rdfs:comment "External references" .
+
+# Properties
+:hasSection a owl:ObjectProperty ;
+  rdfs:domain :DocumentationSection ;
+  rdfs:range :DocumentationSection ;
+  rdfs:label "has Section" .
+
+:describes a owl:ObjectProperty ;
+  rdfs:domain :DocumentationSection ;
+  rdfs:range :BootStage ;
+  rdfs:label "describes" .
+
+:supportsMedia a owl:ObjectProperty ;
+  rdfs:domain :DocumentationSection ;
+  rdfs:range :BootMedia ;
+  rdfs:label "supports Media" .
+
+:hasFeature a owl:ObjectProperty ;
+  rdfs:domain :DocumentationSection ;
+  rdfs:range :SecureBootFeature ;
+  rdfs:label "has Feature" .
+
+:usesMethod a owl:ObjectProperty ;
+  rdfs:domain :DocumentationSection ;
+  rdfs:range :FirmwareUpdateMethod ;
+  rdfs:label "uses Method" .
+
+:hasIssue a owl:ObjectProperty ;
+  rdfs:domain :DocumentationSection ;
+  rdfs:range :TroubleshootingIssue ;
+  rdfs:label "has Issue" .
+
+:hasStep a owl:ObjectProperty ;
+  rdfs:domain :DocumentationSection ;
+  rdfs:range :DiagnosticStep ;
+  rdfs:label "has Step" .
+
+:recommendsTool a owl:ObjectProperty ;
+  rdfs:domain :DocumentationSection ;
+  rdfs:range :Tool ;
+  rdfs:label "recommends Tool" .
+
+:hasReference a owl:ObjectProperty ;
+  rdfs:domain :DocumentationSection ;
+  rdfs:range :Reference ;
+  rdfs:label "has Reference" .
+
+:description a owl:DatatypeProperty ;
+  rdfs:domain owl:Thing ;
+  rdfs:range xsd:string ;
+  rdfs:label "description" .
+
+:supportedModels a owl:DatatypeProperty ;
+  rdfs:domain :BootMedia ;
+  rdfs:range xsd:string ;
+  rdfs:label "supported Models" .
+
+:stepNumber a owl:DatatypeProperty ;
+  rdfs:domain :DiagnosticStep ;
+  rdfs:range xsd:int ;
+  rdfs:label "step Number" .
+
+:url a owl:DatatypeProperty ;
+  rdfs:domain :Reference ;
+  rdfs:range xsd:string ;
+  rdfs:label "url" .
+
+# Instances - Documentation Sections
+:BootSequenceOverview a :DocumentationSection ;
+  :description "Overview of the multi-stage boot process and variations by model" .
+
+:SecureBootSection a :DocumentationSection ;
+  :description "Detailed information about secure boot implementation" .
+
+:FirmwareUpdateSection a :DocumentationSection ;
+  :description "Mechanisms for updating bootloader and firmware" .
+
+:TroubleshootingSection a :DocumentationSection ;
+  :description "Guide for diagnosing and fixing boot failures" .
+
+:ReferencesSection a :DocumentationSection ;
+  :description "External resources and documentation links" .
+
+# Instances - Boot Stages
+:ROMBootStage a :BootStage ;
+  :description "Built-in ROM code initializes ARM processor, searches for bootcode.bin on primary boot media, loads and executes it" .
+
+:BootcodeExecutionStage a :BootStage ;
+  :description "bootcode.bin initializes SDRAM, loads start.elf from boot media, start.elf performs hardware initialization" .
+
+:StartElfExecutionStage a :BootStage ;
+  :description "start.elf parses config.txt for boot configuration, loads appropriate kernel image, applies device tree overlays" .
+
+:KernelBootStage a :BootStage ;
+  :description "Kernel takes control and initializes the operating system" .
+
+# Instances - Boot Media
+:SDCard a :BootMedia ;
+  :supportedModels "all models" ;
+  :description "SD card as primary boot media" .
+
+:USB a :BootMedia ;
+  :supportedModels "Pi 3 and later" ;
+  :description "USB storage devices" .
+
+:NVMe a :BootMedia ;
+  :supportedModels "Pi 5" ;
+  :description "NVMe SSD storage" .
+
+:NetworkBoot a :BootMedia ;
+  :supportedModels "supported models via PXE" ;
+  :description "Network boot using PXE" .
+
+# Instances - Secure Boot Features
+:HardwareRootOfTrust a :SecureBootFeature ;
+  :description "Hardware-based root of trust using OTP bits" .
+
+:SignatureVerification a :SecureBootFeature ;
+  :description "Verifies signatures of bootcode.bin, start.elf, and kernel" .
+
+:OTPKeyStorage a :SecureBootFeature ;
+  :description "Uses One-Time Programmable bits for key storage" .
+
+# Instances - Firmware Update Methods
+:RpiUpdate a :FirmwareUpdateMethod ;
+  :description "Updates bootloader and firmware from Raspberry Pi repository, requires internet" .
+
+:ManualUpdate a :FirmwareUpdateMethod ;
+  :description "Download firmware from GitHub raspberrypi/firmware repository, copy to boot partition" .
+
+:SecureUpdate a :FirmwareUpdateMethod ;
+  :description "For secure boot devices, updates must be signed, use official tools" .
+
+# Instances - Troubleshooting Issues
+:NoBootMediaIssue a :TroubleshootingIssue ;
+  :description "No boot media detected - check SD card insertion and FAT32 format" .
+
+:KernelPanicIssue a :TroubleshootingIssue ;
+  :description "Kernel panic - check kernel image compatibility" .
+
+:SecureBootFailureIssue a :TroubleshootingIssue ;
+  :description "Secure boot failures - verify signatures and OTP programming" .
+
+# Instances - Diagnostic Steps
+:CheckLEDPatterns a :DiagnosticStep ;
+  :stepNumber 1 ;
+  :description "Check LED patterns as per Raspberry Pi documentation" .
+
+:UseSerialConsole a :DiagnosticStep ;
+  :stepNumber 2 ;
+  :description "Use serial console for boot logs" .
+
+:VerifyConfigSyntax a :DiagnosticStep ;
+  :stepNumber 3 ;
+  :description "Verify config.txt syntax" .
+
+:TestWithKnownFirmware a :DiagnosticStep ;
+  :stepNumber 4 ;
+  :description "Test with known good firmware" .
+
+# Instances - Tools
+:RaspberryPiImager a :Tool ;
+  :description "Tool for flashing SD cards with OS images" .
+
+:RaspiConfig a :Tool ;
+  :description "Configuration tool for Raspberry Pi settings" .
+
+:Dmesg a :Tool ;
+  :description "Command to display kernel logs" .
+
+# Instances - References
+:OfficialDocs a :Reference ;
+  :description "Official Raspberry Pi Documentation" ;
+  :url "https://www.raspberrypi.com/documentation/" .
+
+:FirmwareRepo a :Reference ;
+  :description "Firmware Repository on GitHub" ;
+  :url "https://github.com/raspberrypi/firmware" .
+
+:BootloaderSource a :Reference ;
+  :description "Bootloader Source Code" ;
+  :url "https://github.com/raspberrypi/rpi-bootloader" .
+
+# Relationships
+:BootSequenceOverview :describes :ROMBootStage, :BootcodeExecutionStage, :StartElfExecutionStage, :KernelBootStage .
+:BootSequenceOverview :supportsMedia :SDCard, :USB, :NVMe, :NetworkBoot .
+:SecureBootSection :hasFeature :HardwareRootOfTrust, :SignatureVerification, :OTPKeyStorage .
+:FirmwareUpdateSection :usesMethod :RpiUpdate, :ManualUpdate, :SecureUpdate .
+:TroubleshootingSection :hasIssue :NoBootMediaIssue, :KernelPanicIssue, :SecureBootFailureIssue .
+:TroubleshootingSection :hasStep :CheckLEDPatterns, :UseSerialConsole, :VerifyConfigSyntax, :TestWithKnownFirmware .
+:TroubleshootingSection :recommendsTool :RaspberryPiImager, :RaspiConfig, :Dmesg .
+:ReferencesSection :hasReference :OfficialDocs, :FirmwareRepo, :BootloaderSource .

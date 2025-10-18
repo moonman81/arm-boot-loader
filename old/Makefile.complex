@@ -1,0 +1,117 @@
+# Custom Raspberry Pi Bootloader Makefile
+
+CROSS_COMPILE ?= aarch64-elf-
+CC = $(CROSS_COMPILE)gcc
+AS = $(CROSS_COMPILE)as
+LD = $(CROSS_COMPILE)ld
+OBJCOPY = $(CROSS_COMPILE)objcopy
+
+CFLAGS = -Wall -Wextra -Os -ffreestanding -nostdlib -nostartfiles -Wno-unused-parameter -Wno-int-to-pointer-cast -Wno-pointer-to-int-cast -Wno-sign-compare -Wno-unused-variable -Wno-unused-function
+ASFLAGS = -march=armv8-a
+LDFLAGS = -T linker.ld
+
+SRC_C = main.c uart.c sd.c config.c dtb.c gpio.c timer.c interrupt.c mailbox.c clock.c memory.c dma.c i2c.c spi.c pwm.c usb.c ethernet.c fsa_monitor.c test_drivers.c security.c verification.c hardware.c crypto.c
+SRC_S = start.S
+OBJ = $(SRC_C:.c=.o) $(SRC_S:.S=.o)
+
+TARGET = bootloader.bin
+
+.PHONY: all clean
+
+all: $(TARGET)
+
+$(TARGET): bootloader.elf
+	$(OBJCOPY) -O binary $< $@
+
+bootloader.elf: $(OBJ) linker.ld
+	$(LD) $(LDFLAGS) -o $@ $(OBJ)
+
+%.o: %.c
+	$(CC) $(CFLAGS) -c $< -o $@
+
+%.o: %.S
+	$(AS) $(ASFLAGS) $< -o $@
+
+clean:
+	rm -f $(OBJ) bootloader.elf $(TARGET)
+
+# Toolchain check
+check-toolchain:
+	@echo "Checking toolchain..."
+	@$(CC) --version | head -1
+	@$(AS) --version | head -1
+	@$(LD) --version | head -1
+
+# QEMU test targets
+qemu-test: $(TARGET)
+	@echo "Running bootloader in QEMU (raspi3b)..."
+	qemu-system-aarch64 -M raspi3b -kernel $(TARGET) -serial stdio
+
+qemu-boot: $(TARGET)
+	@./qemu_boot.sh
+
+qemu-debug: $(TARGET)
+	@echo "Running bootloader in QEMU with debug output..."
+	@./qemu_boot.sh --debug
+
+qemu-check:
+	@echo "Checking QEMU installation..."
+	@command -v qemu-system-aarch64 >/dev/null 2>&1 && \
+		echo "QEMU found: $$(qemu-system-aarch64 --version | head -1)" || \
+		(echo "QEMU not found. Install with: brew install qemu (macOS) or apt-get install qemu-system-arm (Linux)" && exit 1)
+
+# Hardware test targets
+hw-test-network: $(TARGET)
+	@echo "Hardware testing for network stack:"
+	@echo "1. Connect Ethernet cable to Raspberry Pi"
+	@echo "2. Ensure DHCP server is available on network"
+	@echo "3. Flash $(TARGET) to SD card"
+	@echo "4. Boot Pi and check UART output for DHCP success"
+	@echo "5. Verify IP address assignment and kernel loading"
+
+hw-test-usb: $(TARGET)
+	@echo "Hardware testing for USB stack:"
+	@echo "1. Insert USB mass storage device into Raspberry Pi"
+	@echo "2. Flash $(TARGET) to SD card with kernel_source=usb"
+	@echo "3. Boot Pi and check UART output for USB enumeration"
+	@echo "4. Verify USB device detection and kernel loading"
+
+hw-test-full: $(TARGET)
+	@echo "Full hardware test suite:"
+	@echo "1. Test SD card booting (default)"
+	@echo "2. Test network booting with DHCP"
+	@echo "3. Test USB mass storage booting"
+	@echo "4. Test fallback mechanisms"
+	@echo "5. Verify all boot paths work correctly"
+
+# Static analysis
+static-analysis:
+	python3 static_analysis.py
+
+ontology-validation:
+	python3 validate_ontology.py
+
+code-metrics:
+	python3 code_metrics.py
+
+security-analysis:
+	python3 security_analysis.py
+
+# Hardware testing (requires actual Raspberry Pi)
+hardware-test:
+	@echo "Hardware testing requires physical Raspberry Pi setup"
+	@echo "Run: python3 hardware_test.py --help for options"
+	python3 hardware_test.py --test full
+
+# Documentation generation
+generate-docs:
+	python3 generate_docs.py
+
+validate-docs:
+	python3 static_analysis.py | grep -A 10 "documentation accuracy"
+
+# Run all validations
+validate: static-analysis ontology-validation code-metrics security-analysis validate-docs
+	@echo "All validations completed"
+
+.PHONY: check-toolchain qemu-test qemu-boot qemu-debug qemu-check static-analysis ontology-validation code-metrics security-analysis validate generate-docs validate-docs

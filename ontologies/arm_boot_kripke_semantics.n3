@@ -1,0 +1,188 @@
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix : <http://example.org/arm-boot-kripke#> .
+
+# Kripke Semantics Ontology for ARM Bootloader FSA
+# Based on Kripke's modal logic: possible worlds, accessibility relations
+
+# Kripke Semantics Concepts
+:PossibleWorld a owl:Class ;
+    rdfs:label "Possible World" ;
+    rdfs:comment "A state of affairs in modal logic" .
+
+:AccessibilityRelation a owl:Class ;
+    rdfs:label "Accessibility Relation" ;
+    rdfs:comment "Relation between possible worlds (R in Kripke frame)" .
+
+:KripkeFrame a owl:Class ;
+    rdfs:label "Kripke Frame" ;
+    rdfs:comment "Pair (W, R) where W is set of worlds, R is accessibility relation" .
+
+:KripkeModel a owl:Class ;
+    rdfs:label "Kripke Model" ;
+    rdfs:comment "Frame plus valuation function for atomic propositions" .
+
+:ModalFormula a owl:Class ;
+    rdfs:label "Modal Formula" ;
+    rdfs:comment "Formula in modal logic (□, ◇ operators)" .
+
+# Bootloader FSA as Kripke Model
+:BootKripkeModel a :KripkeModel ;
+    :hasFrame :BootKripkeFrame ;
+    :hasValuation :BootStateValuation .
+
+:BootKripkeFrame a :KripkeFrame ;
+    :worlds :BootStateWorlds ;
+    :accessibilityRelation :BootStateTransitions .
+
+# Possible Worlds: FSA States
+:BootStateWorlds a owl:Class ;
+    rdfs:label "Boot State Possible Worlds" .
+
+:World_BootcodeLoading a :PossibleWorld, :BootStateWorlds ;
+    rdfs:label "Bootcode Loading World" ;
+    :atomicProposition "SD_accessible" ;
+    :atomicProposition "bootcode_exists" .
+
+:World_BootcodeExec a :PossibleWorld, :BootStateWorlds ;
+    rdfs:label "Bootcode Execution World" ;
+    :atomicProposition "bootcode_loaded" ;
+    :atomicProposition "hardware_initializing" .
+
+:World_StartelfLoading a :PossibleWorld, :BootStateWorlds ;
+    rdfs:label "Start.elf Loading World" ;
+    :atomicProposition "bootcode_executed" ;
+    :atomicProposition "startelf_accessible" .
+
+:World_StartelfExec a :PossibleWorld, :BootStateWorlds ;
+    rdfs:label "Start.elf Execution World" ;
+    :atomicProposition "startelf_loaded" ;
+    :atomicProposition "videocore_ready" .
+
+:World_KernelLoading a :PossibleWorld, :BootStateWorlds ;
+    rdfs:label "Kernel Loading World" ;
+    :atomicProposition "startelf_executed" ;
+    :atomicProposition "kernel_accessible" .
+
+:World_KernelExec a :PossibleWorld, :BootStateWorlds ;
+    rdfs:label "Kernel Execution World" ;
+    :atomicProposition "kernel_loaded" ;
+    :atomicProposition "dtb_prepared" .
+
+:World_Success a :PossibleWorld, :BootStateWorlds ;
+    rdfs:label "Success World" ;
+    :atomicProposition "kernel_handover_complete" ;
+    :atomicProposition "boot_successful" .
+
+:World_Failure a :PossibleWorld, :BootStateWorlds ;
+    rdfs:label "Failure World" ;
+    :atomicProposition "critical_error_occurred" ;
+    :atomicProposition "boot_failed" .
+
+# Accessibility Relations: State Transitions
+:BootStateTransitions a :AccessibilityRelation ;
+    rdfs:label "Boot State Accessibility Relations" .
+
+# Normal flow accessibility
+:World_BootcodeLoading :accessibleTo :World_BootcodeExec ;
+    :transitionLabel "SD_init_success" .
+
+:World_BootcodeExec :accessibleTo :World_StartelfLoading ;
+    :transitionLabel "bootcode_exec_complete" .
+
+:World_StartelfLoading :accessibleTo :World_StartelfExec ;
+    :transitionLabel "startelf_load_success" .
+
+:World_StartelfExec :accessibleTo :World_KernelLoading ;
+    :transitionLabel "hardware_init_complete" .
+
+:World_KernelLoading :accessibleTo :World_KernelExec ;
+    :transitionLabel "kernel_load_success" .
+
+:World_KernelExec :accessibleTo :World_Success ;
+    :transitionLabel "kernel_handover_success" .
+
+# Error accessibility (from any world to failure)
+:World_BootcodeLoading :accessibleTo :World_Failure ;
+    :transitionLabel "sd_init_failure" .
+
+:World_BootcodeExec :accessibleTo :World_Failure ;
+    :transitionLabel "bootcode_exec_error" .
+
+:World_StartelfLoading :accessibleTo :World_Failure ;
+    :transitionLabel "startelf_load_failure" .
+
+:World_StartelfExec :accessibleTo :World_Failure ;
+    :transitionLabel "startelf_exec_error" .
+
+:World_KernelLoading :accessibleTo :World_Failure ;
+    :transitionLabel "kernel_load_failure" .
+
+:World_KernelExec :accessibleTo :World_Failure ;
+    :transitionLabel "kernel_handover_failure" .
+
+# Reflexive accessibility (worlds accessible to themselves)
+:World_BootcodeLoading :accessibleTo :World_BootcodeLoading .
+:World_BootcodeExec :accessibleTo :World_BootcodeExec .
+:World_StartelfLoading :accessibleTo :World_StartelfLoading .
+:World_StartelfExec :accessibleTo :World_StartelfExec .
+:World_KernelLoading :accessibleTo :World_KernelLoading .
+:World_KernelExec :accessibleTo :World_KernelExec .
+:World_Success :accessibleTo :World_Success .
+:World_Failure :accessibleTo :World_Failure .
+
+# Modal Formulas
+:BootProcessModal a :ModalFormula ;
+    rdfs:label "Boot Process Modal Logic" .
+
+# Necessary conditions (□ - box operator)
+:NecessarySDAccess :BootProcessModal ;
+    :formula "□SD_accessible" ;
+    :meaning "It is necessary that SD card is accessible" ;
+    :holdsIn :World_BootcodeLoading .
+
+:NecessaryBootSuccess :BootProcessModal ;
+    :formula "□boot_successful" ;
+    :meaning "It is necessary that boot succeeds" ;
+    :holdsIn :World_Success .
+
+# Possible conditions (◇ - diamond operator)
+:PossibleRecovery :BootProcessModal ;
+    :formula "◇boot_successful" ;
+    :meaning "It is possible that boot succeeds" ;
+    :holdsIn :World_Failure .
+
+:PossibleError :BootProcessModal ;
+    :formula "◇critical_error_occurred" ;
+    :meaning "It is possible that a critical error occurs" ;
+    :holdsIn :BootStateWorlds .  # All worlds
+
+# Modal Logic Axioms
+:KripkeAxiom a owl:Class ;
+    rdfs:label "Kripke Modal Axiom" .
+
+:AxiomT :KripkeAxiom ;  # If □φ then φ
+    :statement "If it is necessary that φ, then φ holds" .
+
+:Axiom4 :KripkeAxiom ;  # □φ → □□φ
+    :statement "If φ is necessary, then it is necessarily necessary" .
+
+:AxiomD :KripkeAxiom ;  # □φ → ◇φ
+    :statement "If φ is necessary, then φ is possible" .
+
+# Boot Process Modal Properties
+:BootModalProperties a owl:Class ;
+    rdfs:label "Boot Process Modal Properties" .
+
+:IrrevocableSuccess :BootModalProperties ;
+    :property "□(boot_successful → □boot_successful)" ;
+    :meaning "Once boot succeeds, it necessarily stays successful" .
+
+:PossibleFailure :BootModalProperties ;
+    :property "◇critical_error_occurred" ;
+    :meaning "Failure is always possible from any state" .
+
+:DeterministicTransitions :BootModalProperties ;
+    :property "□(state_transition → ◇next_state)" ;
+    :meaning "State transitions lead to possible next states" .

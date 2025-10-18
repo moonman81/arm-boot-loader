@@ -1,0 +1,112 @@
+@prefix : <http://example.org/arm-gaps-opportunities#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# Ontology for Gaps and Opportunities in ARM Boot Process Documentation and Specification
+<http://example.org/arm-gaps-opportunities> a owl:Ontology ;
+  rdfs:label "ARM Gaps and Opportunities Ontology" .
+
+# Classes
+:Gap a owl:Class ;
+  rdfs:label "Gap" ;
+  rdfs:comment "Deficiencies in documentation or specification" .
+
+:Opportunity a owl:Class ;
+  rdfs:label "Opportunity" ;
+  rdfs:comment "Potential improvements" .
+
+:Area a owl:Class ;
+  rdfs:label "Area" ;
+  rdfs:comment "Areas like Documentation or Specification" .
+
+# Properties
+:affectsArea a owl:ObjectProperty ;
+  rdfs:domain :Gap ;
+  rdfs:range :Area ;
+  rdfs:label "affects Area" .
+
+:addressesGap a owl:ObjectProperty ;
+  rdfs:domain :Opportunity ;
+  rdfs:range :Gap ;
+  rdfs:label "addresses Gap" .
+
+:hasImpact a owl:DatatypeProperty ;
+  rdfs:domain :Gap ;
+  rdfs:range xsd:string ;
+  rdfs:label "has Impact" .
+
+:hasFeasibility a owl:DatatypeProperty ;
+  rdfs:domain :Opportunity ;
+  rdfs:range xsd:string ;
+  rdfs:label "has Feasibility" .
+
+:description a owl:DatatypeProperty ;
+  rdfs:domain :Gap ;
+  rdfs:range xsd:string ;
+  rdfs:label "description" .
+
+:oppDescription a owl:DatatypeProperty ;
+  rdfs:domain :Opportunity ;
+  rdfs:range xsd:string ;
+  rdfs:label "opportunity Description" .
+
+# Instances - Areas
+:Documentation a :Area ;
+  rdfs:label "Documentation" .
+
+:Specification a :Area ;
+  rdfs:label "Specification" .
+
+# Instances - Gaps
+:Gap1 a :Gap ;
+  :description "Incomplete secure boot documentation across all Pi models" ;
+  :affectsArea :Documentation ;
+  :hasImpact "High" .
+
+:Gap2 a :Gap ;
+  :description "Lack of formal specification for boot sequence" ;
+  :affectsArea :Specification ;
+  :hasImpact "High" .
+
+:Gap3 a :Gap ;
+  :description "Insufficient details on firmware update mechanisms" ;
+  :affectsArea :Documentation ;
+  :hasImpact "Medium" .
+
+:Gap4 a :Gap ;
+  :description "Limited guidance on troubleshooting boot failures" ;
+  :affectsArea :Documentation ;
+  :hasImpact "Medium" .
+
+:Gap5 a :Gap ;
+  :description "Absence of standardized boot configuration schemas" ;
+  :affectsArea :Specification ;
+  :hasImpact "Low" .
+
+# Instances - Opportunities
+:Opp1 a :Opportunity ;
+  :oppDescription "Develop comprehensive open-source boot documentation" ;
+  :addressesGap :Gap1, :Gap3, :Gap4 ;
+  :hasFeasibility "High" .
+
+:Opp2 a :Opportunity ;
+  :oppDescription "Create tools for boot process simulation and testing" ;
+  :addressesGap :Gap2 ;
+  :hasFeasibility "Medium" .
+
+:Opp3 a :Opportunity ;
+  :oppDescription "Standardize boot specs with community input" ;
+  :addressesGap :Gap2, :Gap5 ;
+  :hasFeasibility "Medium" .
+
+:Opp4 a :Opportunity ;
+  :oppDescription "Integrate boot docs with IDEs and dev tools" ;
+  :addressesGap :Gap1, :Gap4 ;
+  :hasFeasibility "Low" .
+
+:Opp5 a :Opportunity ;
+  :oppDescription "Provide tutorials for custom bootloaders" ;
+  :addressesGap :Gap3 ;
+  :hasFeasibility "High" .

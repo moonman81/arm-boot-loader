@@ -1,0 +1,98 @@
+@prefix : <http://example.org/arm-boot-type-theory#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# Ontology for Type Theory in Boot Processes
+<http://example.org/arm-boot-type-theory> a owl:Ontology ;
+  rdfs:label "Boot Type Theory Ontology" .
+
+# Classes
+:Type a owl:Class ;
+  rdfs:label "Type" ;
+  rdfs:comment "Types in type theory" .
+
+:Function a owl:Class ;
+  rdfs:label "Function" ;
+  rdfs:comment "Functions between types" .
+
+:DependentType a owl:Class ;
+  rdfs:label "Dependent Type" ;
+  rdfs:comment "Types depending on values" .
+
+# Properties
+:domain a owl:ObjectProperty ;
+  rdfs:domain :Function ;
+  rdfs:range :Type ;
+  rdfs:label "domain" .
+
+:codomain a owl:ObjectProperty ;
+  rdfs:domain :Function ;
+  rdfs:range :Type ;
+  rdfs:label "codomain" .
+
+:dependsOn a owl:ObjectProperty ;
+  rdfs:domain :DependentType ;
+  rdfs:range :Type ;
+  rdfs:label "depends On" .
+
+:description a owl:DatatypeProperty ;
+  rdfs:domain owl:Thing ;
+  rdfs:range xsd:string ;
+  rdfs:label "description" .
+
+# Instances - Types
+:ROMType a :Type ;
+  :description "Type of ROM states" .
+
+:BootcodeType a :Type ;
+  :description "Type of bootcode states" .
+
+:StartElfType a :Type ;
+  :description "Type of start.elf states" .
+
+:KernelType a :Type ;
+  :description "Type of kernel states" .
+
+:SuccessType a :Type ;
+  :description "Type of success states" .
+
+:FailureType a :Type ;
+  :description "Type of failure states" .
+
+# Instances - Functions
+:LoadBootcode a :Function ;
+  :domain :ROMType ;
+  :codomain :BootcodeType ;
+  :description "Function to load bootcode" .
+
+:ExecuteBootcode a :Function ;
+  :domain :BootcodeType ;
+  :codomain :StartElfType ;
+  :description "Function to execute bootcode" .
+
+:LoadStartElf a :Function ;
+  :domain :StartElfType ;
+  :codomain :StartElfType ;
+  :description "Function to load start.elf" .
+
+:ExecuteStartElf a :Function ;
+  :domain :StartElfType ;
+  :codomain :KernelType ;
+  :description "Function to execute start.elf" .
+
+:LoadKernel a :Function ;
+  :domain :KernelType ;
+  :codomain :KernelType ;
+  :description "Function to load kernel" .
+
+:ExecuteKernel a :Function ;
+  :domain :KernelType ;
+  :codomain :SuccessType ;
+  :description "Function to execute kernel" .
+
+# Instances - Dependent Types
+:ConfigDependentType a :DependentType ;
+  :dependsOn :ROMType ;
+  :description "Type depending on configuration" .

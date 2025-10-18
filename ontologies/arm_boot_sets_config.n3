@@ -1,0 +1,156 @@
+@prefix : <http://example.org/arm-boot-sets-config#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# Ontology for Set Theory Boot Configurations
+<http://example.org/arm-boot-sets-config> a owl:Ontology ;
+  rdfs:label "Boot Sets Config Ontology" .
+
+# Classes
+:Set a owl:Class ;
+  rdfs:label "Set" ;
+  rdfs:comment "Mathematical sets" .
+
+:Element a owl:Class ;
+  rdfs:label "Element" ;
+  rdfs:comment "Elements of sets" .
+
+:Configuration a owl:Class ;
+  rdfs:label "Configuration" ;
+  rdfs:comment "Cartesian product configurations" .
+
+:CartesianProduct a owl:Class ;
+  rdfs:label "Cartesian Product" ;
+  rdfs:comment "Product of sets" .
+
+# Properties
+:elementOf a owl:ObjectProperty ;
+  rdfs:domain :Element ;
+  rdfs:range :Set ;
+  rdfs:label "element Of" .
+
+:hasComponent a owl:ObjectProperty ;
+  rdfs:domain :Configuration ;
+  rdfs:range :Element ;
+  rdfs:label "has Component" .
+
+:productOf a owl:ObjectProperty ;
+  rdfs:domain :CartesianProduct ;
+  rdfs:range :Set ;
+  rdfs:label "product Of" .
+
+:description a owl:DatatypeProperty ;
+  rdfs:domain owl:Thing ;
+  rdfs:range xsd:string ;
+  rdfs:label "description" .
+
+# Instances - Sets
+:BootMediaSet a :Set ;
+  :description "Set of boot media options" .
+
+:SecureBootSet a :Set ;
+  :description "Set of secure boot options" .
+
+:ArchitectureSet a :Set ;
+  :description "Set of CPU architectures" .
+
+:ModelSet a :Set ;
+  :description "Set of Raspberry Pi models" .
+
+# Instances - Elements
+:SD a :Element ;
+  :elementOf :BootMediaSet ;
+  :description "SD card" .
+
+:USB a :Element ;
+  :elementOf :BootMediaSet ;
+  :description "USB storage" .
+
+:NVMe a :Element ;
+  :elementOf :BootMediaSet ;
+  :description "NVMe SSD" .
+
+:Network a :Element ;
+  :elementOf :BootMediaSet ;
+  :description "Network boot" .
+
+:SecureEnabled a :Element ;
+  :elementOf :SecureBootSet ;
+  :description "Secure boot enabled" .
+
+:SecureDisabled a :Element ;
+  :elementOf :SecureBootSet ;
+  :description "Secure boot disabled" .
+
+:ARM32 a :Element ;
+  :elementOf :ArchitectureSet ;
+  :description "ARM 32-bit" .
+
+:ARM64 a :Element ;
+  :elementOf :ArchitectureSet ;
+  :description "ARM 64-bit" .
+
+:Pi1 a :Element ;
+  :elementOf :ModelSet ;
+  :description "Raspberry Pi 1" .
+
+:Pi2 a :Element ;
+  :elementOf :ModelSet ;
+  :description "Raspberry Pi 2" .
+
+:Pi3 a :Element ;
+  :elementOf :ModelSet ;
+  :description "Raspberry Pi 3" .
+
+:Pi4 a :Element ;
+  :elementOf :ModelSet ;
+  :description "Raspberry Pi 4" .
+
+:Pi5 a :Element ;
+  :elementOf :ModelSet ;
+  :description "Raspberry Pi 5" .
+
+:PiZero a :Element ;
+  :elementOf :ModelSet ;
+  :description "Raspberry Pi Zero" .
+
+:PiZero2 a :Element ;
+  :elementOf :ModelSet ;
+  :description "Raspberry Pi Zero 2" .
+
+# Cartesian Product
+:ConfigProduct a :CartesianProduct ;
+  :productOf :BootMediaSet, :SecureBootSet, :ArchitectureSet, :ModelSet ;
+  :description "Cartesian product of all sets for configurations" .
+
+# Example Configurations
+:Config1 a :Configuration ;
+  :hasComponent :SD, :SecureDisabled, :ARM32, :Pi3 ;
+  :description "SD, no secure, ARM32, Pi3" .
+
+:Config2 a :Configuration ;
+  :hasComponent :USB, :SecureEnabled, :ARM64, :Pi4 ;
+  :description "USB, secure enabled, ARM64, Pi4" .
+
+:Config3 a :Configuration ;
+  :hasComponent :NVMe, :SecureEnabled, :ARM64, :Pi5 ;
+  :description "NVMe, secure enabled, ARM64, Pi5" .
+
+:Config4 a :Configuration ;
+  :hasComponent :Network, :SecureDisabled, :ARM32, :Pi2 ;
+  :description "Network, no secure, ARM32, Pi2" .
+
+:Config5 a :Configuration ;
+  :hasComponent :SD, :SecureDisabled, :ARM64, :PiZero2 ;
+  :description "SD, no secure, ARM64, PiZero2" .
+
+# Valid Configurations (subset of product)
+:ValidConfigs a :Set ;
+  :description "Subset of valid configurations (model/arch compatibility)" .
+
+:Config1 :elementOf :ValidConfigs .
+:Config2 :elementOf :ValidConfigs .
+:Config3 :elementOf :ValidConfigs .
+# Note: Config4 may not be valid for all models, Config5 depends on model support

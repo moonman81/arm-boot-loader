@@ -1,0 +1,300 @@
+@prefix : <http://example.org/arm-boot-fsa#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# Ontology for ARM Boot Process Finite State Automata
+<http://example.org/arm-boot-fsa> a owl:Ontology ;
+  rdfs:label "ARM Boot FSA Ontology" .
+
+# Classes
+:State a owl:Class ;
+  rdfs:label "State" ;
+  rdfs:comment "States in the boot FSA" .
+
+:Transition a owl:Class ;
+  rdfs:label "Transition" ;
+  rdfs:comment "Transitions between states" .
+
+:Condition a owl:Class ;
+  rdfs:label "Condition" ;
+  rdfs:comment "Conditions for transitions" .
+
+:RaspberryPiModel a owl:Class ;
+  rdfs:label "Raspberry Pi Model" ;
+  rdfs:comment "ARM-based Raspberry Pi models" .
+
+:Finding a owl:Class ;
+  rdfs:label "Finding" ;
+  rdfs:comment "Additional findings from analysis" .
+
+# Properties
+:hasState a owl:ObjectProperty ;
+  rdfs:domain owl:Thing ;
+  rdfs:range :State ;
+  rdfs:label "has State" .
+
+:hasTransition a owl:ObjectProperty ;
+  rdfs:domain owl:Thing ;
+  rdfs:range :Transition ;
+  rdfs:label "has Transition" .
+
+:fromState a owl:ObjectProperty ;
+  rdfs:domain :Transition ;
+  rdfs:range :State ;
+  rdfs:label "from State" .
+
+:toState a owl:ObjectProperty ;
+  rdfs:domain :Transition ;
+  rdfs:range :State ;
+  rdfs:label "to State" .
+
+:hasCondition a owl:ObjectProperty ;
+  rdfs:domain :Transition ;
+  rdfs:range :Condition ;
+  rdfs:label "has Condition" .
+
+:appliesToModel a owl:ObjectProperty ;
+  rdfs:domain :Transition ;
+  rdfs:range :RaspberryPiModel ;
+  rdfs:label "applies To Model" .
+
+:description a owl:DatatypeProperty ;
+  rdfs:domain owl:Thing ;
+  rdfs:range xsd:string ;
+  rdfs:label "description" .
+
+:cpuArchitecture a owl:DatatypeProperty ;
+  rdfs:domain :RaspberryPiModel ;
+  rdfs:range xsd:string ;
+  rdfs:label "cpu Architecture" .
+
+:findingType a owl:DatatypeProperty ;
+  rdfs:domain :Finding ;
+  rdfs:range xsd:string ;
+  rdfs:label "finding Type" .
+
+# Instances - States
+:PowerOn a :State ;
+  :description "Initial state after power on" .
+
+:ROMExecution a :State ;
+  :description "ROM code executing, searching for boot media" .
+
+:BootcodeLoading a :State ;
+  :description "Loading bootcode.bin from boot media" .
+
+:BootcodeExecution a :State ;
+  :description "Executing bootcode.bin, initializing SDRAM" .
+
+:StartElfLoading a :State ;
+  :description "Loading start.elf from boot media" .
+
+:StartElfExecution a :State ;
+  :description "Executing start.elf, hardware initialization" .
+
+:KernelLoading a :State ;
+  :description "Loading kernel image" .
+
+:KernelExecution a :State ;
+  :description "Executing kernel, OS boot" .
+
+:BootSuccess a :State ;
+  :description "Successful boot, OS running" .
+
+:NoBootMedia a :State ;
+  :description "Failure: No bootable media found" .
+
+:FirmwareCorrupt a :State ;
+  :description "Failure: Corrupt or missing firmware" .
+
+:SecureBootFail a :State ;
+  :description "Failure: Secure boot verification failed" .
+
+:HardwareFail a :State ;
+  :description "Failure: Hardware initialization failed" .
+
+# Instances - Conditions
+:PowerStable a :Condition ;
+  :description "Power supply stable" .
+
+:BootMediaFound a :Condition ;
+  :description "Bootable media detected" .
+
+:FileValid a :Condition ;
+  :description "Firmware file exists and valid" .
+
+:SignatureValid a :Condition ;
+  :description "Digital signature verified (secure boot)" .
+
+:HardwareOK a :Condition ;
+  :description "Hardware initialization successful" .
+
+:KernelValid a :Condition ;
+  :description "Kernel image valid and compatible" .
+
+# Instances - Transitions
+:T1 a :Transition ;
+  :fromState :PowerOn ;
+  :toState :ROMExecution ;
+  :hasCondition :PowerStable ;
+  :description "Power on to ROM execution" .
+
+:T2 a :Transition ;
+  :fromState :ROMExecution ;
+  :toState :BootcodeLoading ;
+  :hasCondition :BootMediaFound ;
+  :description "ROM to bootcode loading if media found" .
+
+:T3 a :Transition ;
+  :fromState :ROMExecution ;
+  :toState :NoBootMedia ;
+  :description "ROM to failure if no media" .
+
+:T4 a :Transition ;
+  :fromState :BootcodeLoading ;
+  :toState :BootcodeExecution ;
+  :hasCondition :FileValid ;
+  :description "Bootcode loading to execution if valid" .
+
+:T5 a :Transition ;
+  :fromState :BootcodeLoading ;
+  :toState :FirmwareCorrupt ;
+  :description "Bootcode loading to failure if invalid" .
+
+:T6 a :Transition ;
+  :fromState :BootcodeExecution ;
+  :toState :StartElfLoading ;
+  :hasCondition :HardwareOK ;
+  :description "Bootcode execution to start.elf loading" .
+
+:T7 a :Transition ;
+  :fromState :BootcodeExecution ;
+  :toState :HardwareFail ;
+  :description "Bootcode execution to hardware failure" .
+
+:T8 a :Transition ;
+  :fromState :StartElfLoading ;
+  :toState :StartElfExecution ;
+  :hasCondition :FileValid ;
+  :description "Start.elf loading to execution" .
+
+:T9 a :Transition ;
+  :fromState :StartElfLoading ;
+  :toState :FirmwareCorrupt ;
+  :description "Start.elf loading to failure" .
+
+:T10 a :Transition ;
+  :fromState :StartElfExecution ;
+  :toState :KernelLoading ;
+  :hasCondition :HardwareOK ;
+  :description "Start.elf execution to kernel loading" .
+
+:T11 a :Transition ;
+  :fromState :StartElfExecution ;
+  :toState :HardwareFail ;
+  :description "Start.elf execution to hardware failure" .
+
+:T12 a :Transition ;
+  :fromState :KernelLoading ;
+  :toState :KernelExecution ;
+  :hasCondition :KernelValid ;
+  :description "Kernel loading to execution" .
+
+:T13 a :Transition ;
+  :fromState :KernelLoading ;
+  :toState :FirmwareCorrupt ;
+  :description "Kernel loading to failure" .
+
+:T14 a :Transition ;
+  :fromState :KernelExecution ;
+  :toState :BootSuccess ;
+  :description "Kernel execution to success" .
+
+:T15 a :Transition ;
+  :fromState :KernelExecution ;
+  :toState :HardwareFail ;
+  :description "Kernel execution to failure" .
+
+# Secure boot transitions (for Pi 4/5)
+:T16 a :Transition ;
+  :fromState :BootcodeLoading ;
+  :toState :SecureBootFail ;
+  :hasCondition :SignatureValid ;
+  :appliesToModel :Pi4, :Pi5 ;
+  :description "Bootcode loading fails secure boot check" .
+
+:T17 a :Transition ;
+  :fromState :StartElfLoading ;
+  :toState :SecureBootFail ;
+  :hasCondition :SignatureValid ;
+  :appliesToModel :Pi4, :Pi5 ;
+  :description "Start.elf loading fails secure boot check" .
+
+:T18 a :Transition ;
+  :fromState :KernelLoading ;
+  :toState :SecureBootFail ;
+  :hasCondition :SignatureValid ;
+  :appliesToModel :Pi4, :Pi5 ;
+  :description "Kernel loading fails secure boot check" .
+
+# Instances - Raspberry Pi Models
+:Pi1 a :RaspberryPiModel ;
+  :cpuArchitecture "ARM11" ;
+  :description "Raspberry Pi 1 (ARM11)" .
+
+:Pi2 a :RaspberryPiModel ;
+  :cpuArchitecture "Cortex-A7" ;
+  :description "Raspberry Pi 2 (Cortex-A7)" .
+
+:Pi3 a :RaspberryPiModel ;
+  :cpuArchitecture "Cortex-A53" ;
+  :description "Raspberry Pi 3 (Cortex-A53)" .
+
+:Pi4 a :RaspberryPiModel ;
+  :cpuArchitecture "Cortex-A72" ;
+  :description "Raspberry Pi 4 (Cortex-A72)" .
+
+:Pi5 a :RaspberryPiModel ;
+  :cpuArchitecture "Cortex-A76" ;
+  :description "Raspberry Pi 5 (Cortex-A76)" .
+
+:PiZero a :RaspberryPiModel ;
+  :cpuArchitecture "ARM11" ;
+  :description "Raspberry Pi Zero (ARM11)" .
+
+:PiZero2 a :RaspberryPiModel ;
+  :cpuArchitecture "Cortex-A53" ;
+  :description "Raspberry Pi Zero 2 (Cortex-A53)" .
+
+# Instances - Findings
+:FSA_Deterministic a :Finding ;
+  :findingType "FSA Property" ;
+  :description "The boot process FSA is deterministic with no non-determinism" .
+
+:Sequential_Process a :Finding ;
+  :findingType "Process Characteristic" ;
+  :description "Boot process is primarily sequential with branches only on failures" .
+
+:Model_Differences a :Finding ;
+  :findingType "Model Variation" ;
+  :description "FSA transitions vary by model: Pi 1-3 no USB boot, Pi 4-5 support secure boot and NVMe" .
+
+:Recovery_Mechanisms a :Finding ;
+  :findingType "Recovery" ;
+  :description "Recovery involves retrying boot or using different media; no automatic recovery in FSA" .
+
+:LED_Indicators a :Finding ;
+  :findingType "Diagnostic" ;
+  :description "LED patterns indicate current state and failure modes for debugging" .
+
+:Boot_Order a :Finding ;
+  :findingType "Boot Logic" ;
+  :description "Boot media tried in order: SD, USB, NVMe, network (model dependent)" .
+
+# FSA Definition
+:BootFSA a owl:Thing ;
+  :hasState :PowerOn, :ROMExecution, :BootcodeLoading, :BootcodeExecution, :StartElfLoading, :StartElfExecution, :KernelLoading, :KernelExecution, :BootSuccess, :NoBootMedia, :FirmwareCorrupt, :SecureBootFail, :HardwareFail ;
+  :hasTransition :T1, :T2, :T3, :T4, :T5, :T6, :T7, :T8, :T9, :T10, :T11, :T12, :T13, :T14, :T15, :T16, :T17, :T18 ;
+  :description "Finite State Automata for ARM boot process on Raspberry Pi" .

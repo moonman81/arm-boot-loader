@@ -1,0 +1,146 @@
+@prefix : <http://example.org/arm-boot-domains-master#> .
+@prefix owl: <http://www.w3.org/2002/07/owl#> .
+@prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# Master Ontology for Boot State Domains
+<http://example.org/arm-boot-domains-master> a owl:Ontology ;
+  rdfs:label "Boot Domains Master Ontology" .
+
+# Classes
+:StateDomain a owl:Class ;
+  rdfs:label "State Domain" ;
+  rdfs:comment "Domain for a boot state" .
+
+:BootState a owl:Class ;
+  rdfs:label "Boot State" ;
+  rdfs:comment "Boot process states" .
+
+:DomainRelation a owl:Class ;
+  rdfs:label "Domain Relation" ;
+  rdfs:comment "Relations between domains" .
+
+# Properties
+:hasDomain a owl:ObjectProperty ;
+  rdfs:domain :BootState ;
+  rdfs:range :StateDomain ;
+  rdfs:label "has Domain" .
+
+:relatedTo a owl:ObjectProperty ;
+  rdfs:domain :StateDomain ;
+  rdfs:range :StateDomain ;
+  rdfs:label "related To" .
+
+:domainOntology a owl:DatatypeProperty ;
+  rdfs:domain :StateDomain ;
+  rdfs:range xsd:string ;
+  rdfs:label "domain Ontology" .
+
+:description a owl:DatatypeProperty ;
+  rdfs:domain owl:Thing ;
+  rdfs:range xsd:string ;
+  rdfs:label "description" .
+
+# Instances - Boot States
+:PowerOnState a :BootState ;
+  :description "Initial power on state" .
+
+:ROMExecutionState a :BootState ;
+  :description "ROM code execution state" .
+
+:BootcodeLoadingState a :BootState ;
+  :description "Loading bootcode.bin state" .
+
+:BootcodeExecutionState a :BootState ;
+  :description "Executing bootcode.bin state" .
+
+:StartElfLoadingState a :BootState ;
+  :description "Loading start.elf state" .
+
+:StartElfExecutionState a :BootState ;
+  :description "Executing start.elf state" .
+
+:KernelLoadingState a :BootState ;
+  :description "Loading kernel state" .
+
+:KernelExecutionState a :BootState ;
+  :description "Executing kernel state" .
+
+:BootSuccessState a :BootState ;
+  :description "Successful boot state" .
+
+:FailureStates a :BootState ;
+  :description "Failure states (NoBootMedia, FirmwareCorrupt, etc.)" .
+
+# Instances - State Domains
+:PowerOnDomain a :StateDomain ;
+  :domainOntology "http://example.org/arm-boot-domain-poweron" ;
+  :description "Domain for PowerOn state" .
+
+:ROMDomain a :StateDomain ;
+  :domainOntology "http://example.org/arm-boot-domain-rom" ;
+  :description "Domain for ROMExecution state" .
+
+:BootcodeLoadDomain a :StateDomain ;
+  :domainOntology "http://example.org/arm-boot-domain-bootcode-load" ;
+  :description "Domain for BootcodeLoading state" .
+
+:BootcodeExecDomain a :StateDomain ;
+  :domainOntology "http://example.org/arm-boot-domain-bootcode-exec" ;
+  :description "Domain for BootcodeExecution state" .
+
+:StartElfLoadDomain a :StateDomain ;
+  :domainOntology "http://example.org/arm-boot-domain-startelf-load" ;
+  :description "Domain for StartElfLoading state" .
+
+:StartElfExecDomain a :StateDomain ;
+  :domainOntology "http://example.org/arm-boot-domain-startelf-exec" ;
+  :description "Domain for StartElfExecution state" .
+
+:KernelLoadDomain a :StateDomain ;
+  :domainOntology "http://example.org/arm-boot-domain-kernel-load" ;
+  :description "Domain for KernelLoading state" .
+
+:KernelExecDomain a :StateDomain ;
+  :domainOntology "http://example.org/arm-boot-domain-kernel-exec" ;
+  :description "Domain for KernelExecution state" .
+
+:SuccessDomain a :StateDomain ;
+  :domainOntology "http://example.org/arm-boot-domain-success" ;
+  :description "Domain for BootSuccess state" .
+
+:FailureDomains a :StateDomain ;
+  :domainOntology "http://example.org/arm-boot-domain-failures" ;
+  :description "Domains for failure states" .
+
+# Relations
+:PowerOnState :hasDomain :PowerOnDomain .
+:ROMExecutionState :hasDomain :ROMDomain .
+:BootcodeLoadingState :hasDomain :BootcodeLoadDomain .
+:BootcodeExecutionState :hasDomain :BootcodeExecDomain .
+:StartElfLoadingState :hasDomain :StartElfLoadDomain .
+:StartElfExecutionState :hasDomain :StartElfExecDomain .
+:KernelLoadingState :hasDomain :KernelLoadDomain .
+:KernelExecutionState :hasDomain :KernelExecDomain .
+:BootSuccessState :hasDomain :SuccessDomain .
+:FailureStates :hasDomain :FailureDomains .
+
+# Domain Relations (sequential progression)
+:PowerOnDomain :relatedTo :ROMDomain .
+:ROMDomain :relatedTo :BootcodeLoadDomain .
+:BootcodeLoadDomain :relatedTo :BootcodeExecDomain .
+:BootcodeExecDomain :relatedTo :StartElfLoadDomain .
+:StartElfLoadDomain :relatedTo :StartElfExecDomain .
+:StartElfExecDomain :relatedTo :KernelLoadDomain .
+:KernelLoadDomain :relatedTo :KernelExecDomain .
+:KernelExecDomain :relatedTo :SuccessDomain .
+
+# Failure relations
+:ROMDomain :relatedTo :FailureDomains .
+:BootcodeLoadDomain :relatedTo :FailureDomains .
+:BootcodeExecDomain :relatedTo :FailureDomains .
+:StartElfLoadDomain :relatedTo :FailureDomains .
+:StartElfExecDomain :relatedTo :FailureDomains .
+:KernelLoadDomain :relatedTo :FailureDomains .
+:KernelExecDomain :relatedTo :FailureDomains .
