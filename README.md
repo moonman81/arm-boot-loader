@@ -373,7 +373,19 @@ Please fork and submit pull requests.
 
 ## License
 
-This project is open-source and provided as-is for educational purposes.
+This project is released to the **public domain** via [The Unlicense](LICENSE).
+
+Given the significant AI assistance in development (documented in [AI-DISCLOSURE.md](AI-DISCLOSURE.md)) and uncertainty in copyright law regarding AI-generated content, we've chosen the most permissive approach possible.
+
+**You are free to:**
+- Use commercially or non-commercially
+- Modify without restriction
+- Distribute without attribution
+- Do anything you want with this code
+
+**Status**: Public domain - no rights reserved.
+
+See [LICENSE](LICENSE) for full details.
 
 ## Acknowledgments
 
